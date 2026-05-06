@@ -1,0 +1,3966 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>しゃぼん玉ガーデン — Vocal Mirror</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body {
+    margin: 0; padding: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: linear-gradient(180deg, #87CEEB 0%, #B8E0F5 60%, #C8E6C9 100%);
+    touch-action: manipulation;
+  }
+  
+  /* ── Welcome screen ── */
+  .welcome {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start;
+    background: linear-gradient(180deg, #87CEEB, #B8E0F5);
+    z-index: 100;
+    transition: opacity 0.6s, transform 0.6s;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 40px 0;
+  }
+  .welcome.hidden {
+    opacity: 0;
+    transform: scale(1.1);
+    pointer-events: none;
+  }
+  .welcome h1 {
+    font-size: 36px;
+    color: #FFF;
+    text-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    margin: 0 0 12px;
+    text-align: center;
+    font-weight: 700;
+  }
+  .welcome p {
+    font-size: 16px;
+    color: #FFF;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    margin: 0 0 32px;
+    text-align: center;
+    max-width: 320px;
+    line-height: 1.6;
+  }
+  .start-btn {
+    padding: 20px 48px;
+    border-radius: 40px;
+    border: none;
+    background: #FFF;
+    color: #E94F37;
+    font-size: 22px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    transition: transform 0.2s;
+    font-family: inherit;
+  }
+  .start-btn:active { transform: scale(0.95); }
+  .welcome-tip {
+    margin-top: 24px;
+    color: rgba(255,255,255,0.9);
+    font-size: 13px;
+    text-align: center;
+  }
+  
+  /* ── Main scene ── */
+  .scene {
+    position: fixed; inset: 0;
+    overflow: hidden;
+    z-index: 1;
+  }
+  
+  /* Sun */
+  .sun {
+    position: absolute;
+    top: 8%;
+    right: 12%;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #FFE066;
+    box-shadow: 0 0 60px rgba(255, 224, 102, 0.6);
+    animation: sun-shine 4s ease-in-out infinite alternate;
+  }
+  @keyframes sun-shine {
+    from { box-shadow: 0 0 40px rgba(255, 224, 102, 0.5); }
+    to { box-shadow: 0 0 80px rgba(255, 224, 102, 0.8); }
+  }
+  
+  /* Clouds */
+  .cloud {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 50px;
+    animation: cloud-drift 60s linear infinite;
+  }
+  .cloud::before, .cloud::after {
+    content: '';
+    position: absolute;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 50%;
+  }
+  .cloud-1 { top: 15%; left: -20%; width: 100px; height: 30px; }
+  .cloud-1::before { width: 50px; height: 50px; top: -25px; left: 10px; }
+  .cloud-1::after { width: 40px; height: 40px; top: -20px; right: 10px; }
+  .cloud-2 { top: 25%; left: -10%; width: 80px; height: 24px; animation-duration: 80s; animation-delay: -20s; }
+  .cloud-2::before { width: 40px; height: 40px; top: -20px; left: 8px; }
+  .cloud-2::after { width: 32px; height: 32px; top: -16px; right: 8px; }
+  @keyframes cloud-drift {
+    from { transform: translateX(0); }
+    to { transform: translateX(calc(100vw + 200px)); }
+  }
+  
+  /* Garden ground */
+  .ground {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 28%;
+    background: linear-gradient(180deg, #C8E6C9 0%, #81C784 100%);
+    border-radius: 50% 50% 0 0 / 60px 60px 0 0;
+  }
+  
+  /* Flowers */
+  .flower {
+    position: absolute;
+    bottom: 15%;
+    width: 24px;
+    height: 24px;
+  }
+  .flower::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, var(--flower-color) 30%, transparent 31%) 0 0/12px 12px,
+                radial-gradient(circle, var(--flower-color) 30%, transparent 31%) 12px 0/12px 12px,
+                radial-gradient(circle, var(--flower-color) 30%, transparent 31%) 0 12px/12px 12px,
+                radial-gradient(circle, var(--flower-color) 30%, transparent 31%) 12px 12px/12px 12px;
+  }
+  .flower::after {
+    content: '';
+    position: absolute;
+    width: 8px; height: 8px;
+    top: 8px; left: 8px;
+    border-radius: 50%;
+    background: #FFE066;
+  }
+  
+  /* Rabbit character */
+  .rabbit {
+    position: absolute;
+    bottom: 8%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 140px;
+    cursor: pointer;
+    transition: transform 0.3s ease-out;
+    z-index: 5;
+  }
+  .rabbit.bouncing { animation: rabbit-bounce 0.6s ease-out; }
+  @keyframes rabbit-bounce {
+    0%, 100% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.15) translateY(-10px); }
+  }
+  .rabbit.bouncing-big { animation: rabbit-bounce-big 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes rabbit-bounce-big {
+    0% { transform: translateX(-50%) scale(1); }
+    25% { transform: translateX(-50%) scale(1.3) translateY(-30px) rotate(-5deg); }
+    50% { transform: translateX(-50%) scale(1.25) translateY(-50px) rotate(5deg); }
+    75% { transform: translateX(-50%) scale(1.2) translateY(-25px) rotate(-3deg); }
+    100% { transform: translateX(-50%) scale(1); }
+  }
+  .rabbit-body {
+    position: absolute;
+    bottom: 0;
+    left: 20px;
+    width: 80px;
+    height: 60px;
+    background: #FFFFFF;
+    border-radius: 50% 50% 45% 45%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .rabbit-head {
+    position: absolute;
+    top: 10px;
+    left: 25px;
+    width: 70px;
+    height: 70px;
+    background: #FFFFFF;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .rabbit-ear {
+    position: absolute;
+    top: 0;
+    width: 14px;
+    height: 50px;
+    background: #FFFFFF;
+    border-radius: 7px;
+    transform-origin: bottom center;
+  }
+  .rabbit-ear-l { left: 35px; transform: rotate(-15deg); }
+  .rabbit-ear-r { left: 71px; transform: rotate(15deg); }
+  .rabbit-ear::after {
+    content: '';
+    position: absolute;
+    inset: 4px 3px;
+    background: #FFB8C7;
+    border-radius: 5px;
+  }
+  .rabbit-eye {
+    position: absolute;
+    top: 30px;
+    width: 8px;
+    height: 12px;
+    background: #2C2C2A;
+    border-radius: 50%;
+  }
+  .rabbit-eye-l { left: 42px; }
+  .rabbit-eye-r { left: 70px; }
+  .rabbit-eye.blinking { height: 2px; top: 35px; }
+  .rabbit-cheek {
+    position: absolute;
+    top: 50px;
+    width: 12px; height: 8px;
+    background: #FFB8C7;
+    border-radius: 50%;
+    opacity: 0.6;
+  }
+  .rabbit-cheek-l { left: 36px; }
+  .rabbit-cheek-r { left: 72px; }
+  .rabbit-mouth {
+    position: absolute;
+    top: 48px;
+    left: 56px;
+    width: 8px;
+    height: 6px;
+    border: 2px solid #2C2C2A;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    transition: all 0.2s;
+  }
+  .rabbit-mouth.open {
+    width: 12px;
+    height: 14px;
+    left: 54px;
+    border-radius: 50%;
+    background: #FFB8C7;
+    border: 2px solid #2C2C2A;
+  }
+  
+  /* Friend rabbit: yellow color, hidden by default */
+  .friend-rabbit {
+    left: 8%;
+    bottom: 8%;
+    transform: translateX(-200px);
+    opacity: 0;
+    transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s;
+  }
+  .friend-rabbit.visible {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  .friend-rabbit .rabbit-body,
+  .friend-rabbit .rabbit-head {
+    background: #FFE066 !important;
+  }
+  .friend-rabbit .rabbit-ear {
+    background: #FFE066 !important;
+  }
+  .friend-rabbit .rabbit-ear::after {
+    background: #FFC53D !important;
+  }
+  /* Friend speech bubble: fixed at top center, wide horizontal layout */
+  .friend-speech {
+    position: fixed !important;
+    top: 60px !important;
+    bottom: auto !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) scale(0);
+    background: #FFE066 !important;
+    color: #6B5300 !important;
+    font-size: 64px !important;
+    font-weight: 700 !important;
+    padding: 16px 80px !important;
+    border-radius: 100px !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    z-index: 60;
+    min-width: 360px !important;
+    width: auto !important;
+    height: auto !important;
+    text-align: center !important;
+    border: 4px solid #FFC53D !important;
+    white-space: nowrap !important;
+    letter-spacing: 0.15em !important;
+    line-height: 1.2 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .friend-speech.show {
+    transform: translateX(-50%) scale(1);
+  }
+  .friend-speech::after {
+    display: none !important;
+  }
+  
+  /* Pause overlay */
+  .pause-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 80;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .pause-overlay.show {
+    display: flex;
+  }
+  .pause-overlay .pause-icon {
+    font-size: 80px;
+  }
+  .pause-overlay .pause-text {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0B2E4F;
+  }
+  .pause-overlay .pause-hint {
+    font-size: 14px;
+    color: #4A4A4A;
+  }
+  #resume-btn-big {
+    background: #E94F37 !important;
+    color: white !important;
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    padding: 18px 48px !important;
+    border: none !important;
+    border-radius: 36px !important;
+    box-shadow: 0 8px 24px rgba(233, 79, 55, 0.4) !important;
+    margin-top: 16px !important;
+    cursor: pointer !important;
+    font-family: inherit !important;
+    z-index: 81 !important;
+  }
+  #resume-btn-big:active {
+    transform: scale(0.96);
+  }
+  
+  /* Opening animation overlay */
+  .opening-overlay {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(135, 206, 235, 0.95), rgba(184, 224, 245, 0.95));
+    backdrop-filter: blur(10px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 90;
+    flex-direction: column;
+    gap: 32px;
+  }
+  .opening-overlay.show {
+    display: flex;
+    animation: opening-fade-in 0.4s ease-out;
+  }
+  @keyframes opening-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  /* Big rabbit for opening */
+  .opening-rabbit {
+    width: 240px;
+    height: 280px;
+    position: relative;
+    animation: opening-bounce 1.2s ease-in-out infinite;
+  }
+  @keyframes opening-bounce {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-12px) scale(1.04); }
+  }
+  
+  .opening-rabbit .rabbit-body {
+    position: absolute;
+    bottom: 0;
+    left: 40px;
+    width: 160px;
+    height: 120px;
+    background: #FFFFFF;
+    border-radius: 50% 50% 45% 45%;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  }
+  .opening-rabbit .rabbit-head {
+    position: absolute;
+    top: 20px;
+    left: 50px;
+    width: 140px;
+    height: 140px;
+    background: #FFFFFF;
+    border-radius: 50%;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  }
+  .opening-rabbit .rabbit-ear {
+    position: absolute;
+    top: 0;
+    width: 28px;
+    height: 100px;
+    background: #FFFFFF;
+    border-radius: 14px;
+    transform-origin: bottom center;
+  }
+  .opening-rabbit .rabbit-ear-l { left: 70px; transform: rotate(-15deg); }
+  .opening-rabbit .rabbit-ear-r { left: 142px; transform: rotate(15deg); }
+  .opening-rabbit .rabbit-ear::after {
+    content: '';
+    position: absolute;
+    inset: 8px 6px;
+    background: #FFB8C7;
+    border-radius: 10px;
+  }
+  .opening-rabbit .rabbit-eye {
+    position: absolute;
+    top: 60px;
+    width: 16px;
+    height: 24px;
+    background: #2C2C2A;
+    border-radius: 50%;
+  }
+  .opening-rabbit .rabbit-eye-l { left: 84px; }
+  .opening-rabbit .rabbit-eye-r { left: 140px; }
+  .opening-rabbit .rabbit-cheek {
+    position: absolute;
+    top: 100px;
+    width: 24px;
+    height: 16px;
+    background: #FFB8C7;
+    border-radius: 50%;
+    opacity: 0.6;
+  }
+  .opening-rabbit .rabbit-cheek-l { left: 72px; }
+  .opening-rabbit .rabbit-cheek-r { left: 144px; }
+  .opening-rabbit .rabbit-mouth {
+    position: absolute;
+    top: 100px;
+    left: 110px;
+    width: 24px;
+    height: 28px;
+    border-radius: 50%;
+    background: #FFB8C7;
+    border: 3px solid #2C2C2A;
+    animation: opening-mouth-talk 0.5s ease-in-out infinite alternate;
+  }
+  @keyframes opening-mouth-talk {
+    from { transform: scaleY(0.4); }
+    to { transform: scaleY(1.2); }
+  }
+  
+  /* Opening text bubble */
+  .opening-text {
+    background: #FFE066;
+    color: #6B5300;
+    font-size: 48px;
+    font-weight: 700;
+    padding: 20px 60px;
+    border-radius: 100px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    border: 4px solid #FFC53D;
+    text-align: center;
+    letter-spacing: 0.05em;
+    animation: opening-text-pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes opening-text-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  
+  /* Bubbles */
+  #bubble-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 6;
+    overflow: visible;
+  }
+  .bubble {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    will-change: transform;
+    z-index: 6;
+  }
+  .bubble-inner {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%,
+      rgba(255,255,255,0.95) 0%,
+      var(--bubble-color, rgba(180, 220, 250, 0.6)) 40%,
+      var(--bubble-color, rgba(140, 200, 240, 0.4)) 70%);
+    box-shadow:
+      inset 0 0 20px rgba(255,255,255,0.4),
+      0 0 20px var(--bubble-glow, rgba(180, 220, 250, 0.5));
+    position: relative;
+  }
+  .bubble-inner::after {
+    content: '';
+    position: absolute;
+    top: 15%;
+    left: 20%;
+    width: 30%;
+    height: 30%;
+    background: rgba(255,255,255,0.7);
+    border-radius: 50%;
+    filter: blur(2px);
+  }
+  
+  /* Sparkle when bubble pops */
+  .sparkle {
+    position: absolute;
+    pointer-events: none;
+    color: #FFE066;
+    font-size: 24px;
+    opacity: 0;
+    text-shadow: 0 0 8px rgba(255, 224, 102, 0.8);
+  }
+  
+  /* HUD overlay (top right) */
+  .hud {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 8px;
+    z-index: 50;
+  }
+  .hud-pill {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #0B2E4F;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  .hud-pill.collection { background: rgba(255, 224, 102, 0.9); color: #6B5300; }
+  
+  /* Bottom controls (small, parent-only) */
+  .controls {
+    position: fixed;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 50;
+  }
+  .ctrl-btn {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #4A4A4A;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    font-family: inherit;
+  }
+  .ctrl-btn:active { transform: scale(0.95); }
+  
+  /* Celebration mode overlay */
+  .celebration-overlay {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 30;
+    opacity: 0;
+    transition: opacity 0.5s;
+    background: radial-gradient(circle at center, transparent 30%, rgba(255, 215, 0, 0.15) 100%);
+  }
+  .celebration-overlay.active { opacity: 1; }
+  
+  /* Confetti */
+  .confetti {
+    position: absolute;
+    width: 8px; height: 8px;
+    pointer-events: none;
+  }
+  
+  /* Dashboard */
+  .dashboard {
+    position: fixed; inset: 0;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(20px);
+    z-index: 200;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.4s ease-out;
+    padding: 24px 20px 40px;
+  }
+  .dashboard.open { transform: translateY(0); }
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .dashboard h2 {
+    color: #0B2E4F;
+    margin: 0;
+    font-size: 24px;
+  }
+  .close-btn {
+    background: #F0EBE2;
+    border: none;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    color: #4A4A4A;
+  }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: #FAF6F0;
+    padding: 16px;
+    border-radius: 16px;
+  }
+  .stat-card-label {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 6px;
+  }
+  .stat-card-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0B2E4F;
+  }
+  .stat-card-unit {
+    font-size: 14px;
+    color: #888;
+    font-weight: 400;
+  }
+  .timeline {
+    background: #FAF6F0;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .timeline h3 {
+    margin: 0 0 12px;
+    font-size: 16px;
+    color: #0B2E4F;
+  }
+  .timeline-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 80px;
+    margin-bottom: 8px;
+  }
+  .timeline-tick {
+    flex: 1;
+    background: #00A19A;
+    border-radius: 2px 2px 0 0;
+    min-height: 2px;
+    transition: height 0.3s;
+  }
+  .timeline-axis {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #888;
+    font-family: ui-monospace, monospace;
+  }
+  .insights {
+    background: #FFF8F0;
+    border-left: 3px solid #E94F37;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #4A4A4A;
+    line-height: 1.6;
+  }
+  .insights strong { color: #E94F37; }
+  
+  /* Settings panel */
+  .settings-panel {
+    position: fixed;
+    top: 0; right: 0;
+    width: 320px;
+    max-width: 90%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(20px);
+    z-index: 150;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-out;
+    padding: 20px;
+    overflow-y: auto;
+    box-shadow: -8px 0 24px rgba(0,0,0,0.1);
+  }
+  .settings-panel.open { transform: translateX(0); }
+  .settings-panel h3 {
+    color: #0B2E4F;
+    margin: 0 0 16px;
+    font-size: 18px;
+  }
+  .setting-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #4A4A4A;
+  }
+  .setting-row label { flex: 1; }
+  .setting-row input[type=range] { flex: 1; }
+  .setting-row span {
+    min-width: 50px;
+    text-align: right;
+    font-family: ui-monospace, monospace;
+  }
+  
+  /* Live VU meter at bottom */
+  .live-vu {
+    position: fixed;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 4px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    z-index: 49;
+  }
+  .live-vu-fill {
+    height: 100%;
+    background: #00A19A;
+    width: 0%;
+    transition: width 0.05s linear;
+  }
+  .live-vu-thresh {
+    position: absolute;
+    top: -2px; bottom: -2px;
+    width: 1px;
+    background: #E94F37;
+  }
+  .speech-bubble {
+    position: absolute;
+    bottom: 145px;
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    background: white;
+    padding: 12px 24px;
+    border-radius: 24px;
+    font-size: 32px;
+    font-weight: 700;
+    color: #E94F37;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 4;
+  }
+  .speech-bubble.show { transform: translateX(-50%) scale(1); }
+  .speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid white;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Welcome screen / Setup wizard ── -->
+<div class="welcome" id="welcome">
+  
+  <!-- Step 1: Welcome -->
+  <div id="setup-step-1" class="setup-step">
+    <h1>🎈 しゃぼん玉ガーデン</h1>
+    <p>声を出すと しゃぼん玉が ふわふわ うかぶよ</p>
+    <p style="font-size: 13px; color: rgba(255,255,255,0.85); margin: -16px 0 24px; max-width: 320px;">「つぎへ」を押すとマイクの許可を求めます。録音と発声の検出に使います。</p>
+    <button class="start-btn" id="next-to-stage">つぎへ →</button>
+  </div>
+  
+  <!-- Step 2: Stage selection -->
+  <div id="setup-step-2" class="setup-step" style="display: none;">
+    <h1 style="font-size: 26px; margin-bottom: 8px;">① コースを選ぶ</h1>
+    <p style="font-size: 14px; margin-bottom: 20px;">お子さんの段階に合わせてコースを選んでください</p>
+    <div id="setup-stage-list" style="display: flex; flex-direction: column; gap: 8px; max-width: 360px; width: 100%; padding: 0 16px;">
+      <!-- generated dynamically -->
+    </div>
+  </div>
+  
+  <!-- Step 3: Recording -->
+  <div id="setup-step-3" class="setup-step" style="display: none;">
+    <h1 style="font-size: 26px; margin-bottom: 8px;">② 親の声を録音</h1>
+    <p style="font-size: 13px; margin-bottom: 16px; max-width: 360px; line-height: 1.6;">
+      お子さんに聞かせる言葉を録音してください。<br>
+      <strong style="background: rgba(255,255,255,0.3); padding: 2px 8px; border-radius: 8px;">少し誇張して、ゆっくり伸ばす</strong>のがコツです。
+    </p>
+    
+    <!-- Praise recording section (special) -->
+    <div style="max-width: 360px; width: 100%; padding: 0 16px; margin-bottom: 12px;">
+      <div style="background: rgba(255, 107, 157, 0.18); border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 14px; padding: 14px;">
+        <div style="font-size: 13px; color: #fff; font-weight: 700; margin-bottom: 4px;">
+          🎉 ほめ言葉（必須）
+        </div>
+        <div style="font-size: 11px; color: rgba(255,255,255,0.85); margin-bottom: 10px; line-height: 1.5;">
+          お子さんが声を出した時に流れる「すごいね！」を録音してください。<br>
+          明るい声で、笑顔で。
+        </div>
+        <div id="setup-praise-row">
+          <!-- Generated dynamically -->
+        </div>
+      </div>
+    </div>
+    
+    <!-- Opening greeting recording (optional) -->
+    <div style="max-width: 360px; width: 100%; padding: 0 16px; margin-bottom: 12px;">
+      <div style="background: rgba(135, 206, 235, 0.22); border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 14px; padding: 14px;">
+        <div style="font-size: 13px; color: #fff; font-weight: 700; margin-bottom: 4px;">
+          🎵 はじまりの挨拶（任意）
+        </div>
+        <div style="font-size: 11px; color: rgba(255,255,255,0.85); margin-bottom: 10px; line-height: 1.5;">
+          スタート時に流れる「まねしてこえをだそう！」を録音してください。<br>
+          優しい声で、語りかけるように。
+        </div>
+        <div id="setup-greeting-row">
+          <!-- Generated dynamically -->
+        </div>
+      </div>
+    </div>
+    
+    <p style="font-size: 12px; color: rgba(255,255,255,0.85); margin-bottom: 8px; max-width: 360px;">
+      ↓ コースの言葉を録音
+    </p>
+    
+    <div id="setup-record-list" style="display: flex; flex-direction: column; gap: 8px; max-width: 360px; width: 100%; padding: 0 16px; max-height: 40vh; overflow-y: auto;">
+      <!-- generated dynamically -->
+    </div>
+    <div style="display: flex; gap: 8px; margin-top: 16px;">
+      <button class="ctrl-btn" id="back-to-stage" style="background: white; color: #4A4A4A; padding: 12px 20px; font-size: 14px;">← もどる</button>
+      <button class="start-btn" id="start-playing" style="font-size: 16px; padding: 14px 28px;">▶ 遊びをスタート</button>
+    </div>
+  </div>
+  
+</div>
+
+<style>
+  .setup-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 100%;
+    padding: 20px 0;
+    box-sizing: border-box;
+  }
+  .setup-stage-btn {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 2px solid white;
+    background: rgba(255, 255, 255, 0.95);
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .setup-stage-btn:active { transform: scale(0.98); }
+  .setup-stage-btn .num { font-size: 12px; color: #888; font-weight: 600; }
+  .setup-stage-btn .title { font-size: 16px; color: #0B2E4F; font-weight: 700; margin-top: 2px; }
+  .setup-stage-btn .desc { font-size: 12px; color: #4A4A4A; margin-top: 4px; }
+  .setup-stage-btn .example { font-size: 11px; color: #E94F37; margin-top: 4px; font-weight: 500; }
+  
+  .record-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+  }
+  .record-row .word {
+    flex: 1;
+    font-size: 22px;
+    font-weight: 700;
+    color: #0B2E4F;
+  }
+  .record-row .status {
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .record-row .status.done { color: #00A19A; }
+  .record-row .status.pending { color: #888; }
+  .record-row .rec-btn,
+  .record-row .play-btn,
+  .record-row .del-btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .record-row .rec-btn {
+    background: #00A19A;
+    color: white;
+    min-width: 70px;
+  }
+  .record-row .rec-btn.recording {
+    background: #E94F37;
+    animation: pulseRec 1s ease-in-out infinite;
+  }
+  @keyframes pulseRec {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  .record-row .play-btn {
+    background: white;
+    color: #0B2E4F;
+    border: 1px solid #E5DFD6;
+  }
+  .record-row .del-btn {
+    background: white;
+    color: #888;
+    border: 1px solid #E5DFD6;
+    padding: 8px 10px;
+  }
+</style>
+
+<!-- ── Main scene ── -->
+<div class="scene">
+  <div class="sun"></div>
+  <div class="cloud cloud-1"></div>
+  <div class="cloud cloud-2"></div>
+  <div class="ground"></div>
+  
+  <!-- Flowers -->
+  <div class="flower" style="left: 8%; --flower-color: #E94F37;"></div>
+  <div class="flower" style="left: 22%; --flower-color: #FFB8C7; bottom: 13%;"></div>
+  <div class="flower" style="left: 78%; --flower-color: #00A19A; bottom: 14%;"></div>
+  <div class="flower" style="left: 90%; --flower-color: #F2A65A;"></div>
+  <div class="flower" style="left: 14%; --flower-color: #00A19A; bottom: 10%;"></div>
+  <div class="flower" style="left: 84%; --flower-color: #E94F37; bottom: 11%;"></div>
+  
+  <!-- Rabbit character -->
+  <div class="rabbit" id="rabbit">
+    <div class="rabbit-ear rabbit-ear-l"></div>
+    <div class="rabbit-ear rabbit-ear-r"></div>
+    <div class="rabbit-body"></div>
+    <div class="rabbit-head"></div>
+    <div class="rabbit-eye rabbit-eye-l" id="eye-l"></div>
+    <div class="rabbit-eye rabbit-eye-r" id="eye-r"></div>
+    <div class="rabbit-cheek rabbit-cheek-l"></div>
+    <div class="rabbit-cheek rabbit-cheek-r"></div>
+    <div class="rabbit-mouth" id="mouth"></div>
+  </div>
+  
+  <!-- Friend rabbit (yellow) - shows up to demonstrate -->
+  <div class="rabbit friend-rabbit" id="friend-rabbit">
+    <div class="rabbit-ear rabbit-ear-l"></div>
+    <div class="rabbit-ear rabbit-ear-r"></div>
+    <div class="rabbit-body"></div>
+    <div class="rabbit-head"></div>
+    <div class="rabbit-eye rabbit-eye-l"></div>
+    <div class="rabbit-eye rabbit-eye-r"></div>
+    <div class="rabbit-cheek rabbit-cheek-l"></div>
+    <div class="rabbit-cheek rabbit-cheek-r"></div>
+    <div class="rabbit-mouth" id="friend-mouth"></div>
+  </div>
+  
+  <!-- Speech bubble for friend rabbit -->
+  <div class="friend-speech" id="friend-speech">あー</div>
+  
+  <!-- Speech bubble for modeling -->
+  <div class="speech-bubble" id="speech">あー</div>
+  
+  <!-- Bubble container -->
+  <div id="bubble-container"></div>
+</div>
+
+<!-- ── HUD ── -->
+<div class="hud">
+  <div class="hud-pill" id="hud-count">
+    <span>🎈</span><span id="bubble-count">0</span>
+  </div>
+  <div class="hud-pill collection" id="hud-streak" style="display: none;">
+    <span>✨</span><span id="streak-count">0</span>
+  </div>
+</div>
+
+<!-- ── Controls ── -->
+<div class="controls">
+  <button class="ctrl-btn" id="home-btn">🏠 ホーム</button>
+  <button class="ctrl-btn" id="pause-btn">⏸️ 一時停止</button>
+  <button class="ctrl-btn" id="dashboard-btn">📊 結果</button>
+  <button class="ctrl-btn" id="settings-btn">⚙️ 設定</button>
+</div>
+
+<!-- ── Opening animation overlay ── -->
+<div class="opening-overlay" id="opening-overlay">
+  <div class="opening-rabbit">
+    <div class="rabbit-ear rabbit-ear-l"></div>
+    <div class="rabbit-ear rabbit-ear-r"></div>
+    <div class="rabbit-body"></div>
+    <div class="rabbit-head"></div>
+    <div class="rabbit-eye rabbit-eye-l"></div>
+    <div class="rabbit-eye rabbit-eye-r"></div>
+    <div class="rabbit-cheek rabbit-cheek-l"></div>
+    <div class="rabbit-cheek rabbit-cheek-r"></div>
+    <div class="rabbit-mouth"></div>
+  </div>
+  <div class="opening-text">まねしてこえをだそう！</div>
+</div>
+
+<!-- ── Pause overlay ── -->
+<div class="pause-overlay" id="pause-overlay">
+  <div class="pause-icon">⏸️</div>
+  <div class="pause-text">一時停止中</div>
+  <button class="ctrl-btn" id="resume-btn-big" style="background: #E94F37; color: white; font-size: 18px; font-weight: 700; padding: 16px 36px; border: none; border-radius: 30px; box-shadow: 0 6px 20px rgba(233, 79, 55, 0.3); margin-top: 12px;">▶️ 再開する</button>
+</div>
+
+<!-- ── Live VU meter ── -->
+<div class="live-vu">
+  <div class="live-vu-fill" id="live-vu-fill"></div>
+  <div class="live-vu-thresh" id="live-vu-thresh" style="left: 16%;"></div>
+</div>
+
+<!-- ── Celebration overlay ── -->
+<div class="celebration-overlay" id="celebration"></div>
+
+<!-- ── Settings panel ── -->
+<div class="settings-panel" id="settings">
+  <h3>設定（保護者用）</h3>
+  
+  <div class="setting-row">
+    <label>音量感度</label>
+    <input type="range" id="vol-thresh" min="1" max="30" value="2" step="1">
+    <span id="vol-thresh-num">0.002</span>
+  </div>
+  
+  <div class="setting-row">
+    <label>声らしさ</label>
+    <input type="range" id="hnr-thresh" min="5" max="70" value="15" step="1">
+    <span id="hnr-thresh-num">0.15</span>
+  </div>
+  
+  <div class="setting-row">
+    <label>モデル提示</label>
+    <input type="checkbox" id="modeling-on" checked>
+  </div>
+  
+  <div style="background: #FFF8F0; padding: 14px; border-radius: 12px; margin-bottom: 16px; border-left: 3px solid #E94F37;">
+    <div style="font-size: 13px; font-weight: 600; color: #0B2E4F; margin-bottom: 8px;">
+      🎙️ 親の声を録音
+    </div>
+    <div style="font-size: 12px; color: #4A4A4A; margin-bottom: 10px; line-height: 1.5;">
+      下のコースを選んでから、各単語ごとに録音できます。<br>
+      <strong style="color: #E94F37;">親の声で教えると効果が大きく上がります。</strong>
+    </div>
+    <div id="recording-list" style="display: flex; flex-direction: column; gap: 6px;">
+      <!-- Generated dynamically based on current stage -->
+    </div>
+    <div style="font-size: 11px; color: #888; margin-top: 8px;">
+      録音は端末内に保存され、外部に送信されません。
+    </div>
+  </div>
+  
+  <div style="background: #FFF8F0; padding: 14px; border-radius: 12px; margin-bottom: 16px; border-left: 3px solid #E94F37;">
+    <div style="font-size: 13px; font-weight: 600; color: #0B2E4F; margin-bottom: 8px;">
+      🐰 ともだちウサギの言葉
+    </div>
+    
+    <div style="font-size: 12px; color: #4A4A4A; margin-bottom: 10px; line-height: 1.5;">
+      お子さんの発達段階に合わせて選んでください。<br>
+      <strong style="color: #E94F37;">下の段階から順番に</strong>進めるのが効果的です。
+    </div>
+    
+    <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
+      <button class="ctrl-btn stage-btn" data-stage="1" style="text-align: left; padding: 10px 12px; background: white;">
+        <div style="font-weight: 600; color: #0B2E4F; font-size: 13px;">① 開口母音 <span style="color: #888; font-size: 10px; font-weight: 400;">調音労力が最小、世界共通の最初の音</span></div>
+        <div style="font-size: 11px; color: #4A4A4A; margin-top: 2px;">あ → あー → あーー → あーーー <span style="color: #E94F37;">（段階的に長く）</span></div>
+      </button>
+      
+      <button class="ctrl-btn stage-btn" data-stage="2" style="text-align: left; padding: 10px 12px; background: white;">
+        <div style="font-weight: 600; color: #0B2E4F; font-size: 13px;">② 母音空間の拡張 <span style="color: #888; font-size: 10px; font-weight: 400;">母音3頂点（あ・い・う）の獲得</span></div>
+        <div style="font-size: 11px; color: #4A4A4A; margin-top: 2px;">あー / いー / うー <span style="color: #888;">（4回反復）</span></div>
+      </button>
+      
+      <button class="ctrl-btn stage-btn" data-stage="3" style="text-align: left; padding: 10px 12px; background: white;">
+        <div style="font-weight: 600; color: #0B2E4F; font-size: 13px;">③ 両唇音の導入 <span style="color: #888; font-size: 10px; font-weight: 400;">視覚的に観察しやすい子音（ま行・ぱ行・ば行）</span></div>
+        <div style="font-size: 11px; color: #4A4A4A; margin-top: 2px;">まー / ぱー / ばー <span style="color: #888;">（4回反復）</span></div>
+      </button>
+      
+      <button class="ctrl-btn stage-btn" data-stage="4" style="text-align: left; padding: 10px 12px; background: white;">
+        <div style="font-weight: 600; color: #0B2E4F; font-size: 13px;">④ CV反復（規準喃語） <span style="color: #888; font-size: 10px; font-weight: 400;">言語獲得の最重要前駆体</span></div>
+        <div style="font-size: 11px; color: #4A4A4A; margin-top: 2px;">ま → まま → ままま → まままま <span style="color: #E94F37;">（音節を増やす）</span></div>
+      </button>
+      
+      <button class="ctrl-btn stage-btn" data-stage="5" style="text-align: left; padding: 10px 12px; background: white;">
+        <div style="font-weight: 600; color: #0B2E4F; font-size: 13px;">⑤ 歯茎音の追加 <span style="color: #888; font-size: 10px; font-weight: 400;">た行・な行（舌先運動の獲得）</span></div>
+        <div style="font-size: 11px; color: #4A4A4A; margin-top: 2px;">たー / なー / だー <span style="color: #888;">（4回反復）</span></div>
+      </button>
+      
+      <button class="ctrl-btn stage-btn" data-stage="6" style="text-align: left; padding: 10px 12px; background: white;">
+        <div style="font-weight: 600; color: #0B2E4F; font-size: 13px;">⑥ 初語（モーラ反復語） <span style="color: #888; font-size: 10px; font-weight: 400;">日本語の自然な初語パターン</span></div>
+        <div style="font-size: 11px; color: #4A4A4A; margin-top: 2px;">まんま / わんわん / ぶーぶー <span style="color: #888;">（4回反復）</span></div>
+      </button>
+      
+      <button class="ctrl-btn stage-btn" data-stage="7" style="text-align: left; padding: 10px 12px; background: white;">
+        <div style="font-weight: 600; color: #0B2E4F; font-size: 13px;">⑦ 異なるCV結合 <span style="color: #888; font-size: 10px; font-weight: 400;">複雑な単語構造</span></div>
+        <div style="font-size: 11px; color: #4A4A4A; margin-top: 2px;">バナナ / ねこ / りんご <span style="color: #888;">（4回反復）</span></div>
+      </button>
+      
+      <button class="ctrl-btn stage-btn" data-stage="8" style="text-align: left; padding: 10px 12px; background: white;">
+        <div style="font-weight: 600; color: #0B2E4F; font-size: 13px;">⑧ 身近な名詞 <span style="color: #888; font-size: 10px; font-weight: 400;">語彙爆発期の核となる名詞群</span></div>
+        <div style="font-size: 11px; color: #4A4A4A; margin-top: 2px;">ママ / パパ / ねこ / いぬ / くるま... <span style="color: #E94F37;">（プロソディ変化）</span></div>
+      </button>
+      
+      <button class="ctrl-btn stage-btn" data-stage="9" style="text-align: left; padding: 10px 12px; background: white;">
+        <div style="font-weight: 600; color: #0B2E4F; font-size: 13px;">⑨ 動作動詞 <span style="color: #888; font-size: 10px; font-weight: 400;">2語文の述語となる基本動詞</span></div>
+        <div style="font-size: 11px; color: #4A4A4A; margin-top: 2px;">きた / いる / たべる / のむ / ねる... <span style="color: #E94F37;">（プロソディ変化）</span></div>
+      </button>
+      
+      <button class="ctrl-btn stage-btn" data-stage="10" style="text-align: left; padding: 10px 12px; background: white;">
+        <div style="font-weight: 600; color: #0B2E4F; font-size: 13px;">⑩ 属性・状態語 <span style="color: #888; font-size: 10px; font-weight: 400;">形容詞・感覚語の獲得</span></div>
+        <div style="font-size: 11px; color: #4A4A4A; margin-top: 2px;">おおきい / ちいさい / あつい... <span style="color: #E94F37;">（プロソディ変化）</span></div>
+      </button>
+      
+      <button class="ctrl-btn stage-btn" data-stage="11" style="text-align: left; padding: 10px 12px; background: white;">
+        <div style="font-weight: 600; color: #0B2E4F; font-size: 13px;">⑪ 2語文（並置文） <span style="color: #888; font-size: 10px; font-weight: 400;">統語の萌芽（Brown 1973）</span></div>
+        <div style="font-size: 11px; color: #4A4A4A; margin-top: 2px;">ママ・きた / ねこ・いる / ボール・ころころ <span style="color: #E94F37;">（語間ポーズ）</span></div>
+      </button>
+    </div>
+    
+    <details style="margin-top: 10px;">
+      <summary style="font-size: 12px; color: #4A4A4A; cursor: pointer; font-weight: 500;">⚙️ 自由に編集する</summary>
+      <div style="margin-top: 8px;">
+        <textarea id="modeling-words" rows="4" 
+          style="width: 100%; padding: 10px; border: 1px solid #E5DFD6; border-radius: 8px; font-family: inherit; font-size: 14px; color: #1A1A1A; resize: vertical; box-sizing: border-box;"
+          placeholder="あー&#10;いー&#10;うー">あー
+あー
+あ</textarea>
+        <div style="font-size: 11px; color: #888; margin-top: 6px; line-height: 1.5;">
+          1行に1つずつ入力。30秒沈黙のたびに順番にローテーションされます。
+        </div>
+      </div>
+    </details>
+  </div>
+  
+  <div class="setting-row">
+    <button class="ctrl-btn" id="test-bubble" style="width: 100%; background: #87CEEB; color: #0B2E4F;">🎈 しゃぼん玉をテスト</button>
+  </div>
+  
+  <div class="setting-row">
+    <button class="ctrl-btn" id="recalibrate" style="width: 100%; background: #00A19A; color: white;">🎯 マイク再校正（2秒静かにする）</button>
+  </div>
+  
+  <div class="setting-row">
+    <button class="ctrl-btn" id="test-modeling" style="width: 100%; background: #FFE066; color: #6B5300;">🔊 モデル発声をテスト</button>
+  </div>
+  
+  <div class="setting-row">
+    <label>音声フィルタ</label>
+    <input type="checkbox" id="strict-mode" checked>
+  </div>
+  
+  <h3 style="margin-top: 32px;">記録</h3>
+  <div style="font-family: ui-monospace, monospace; font-size: 12px; color: #4A4A4A; line-height: 1.8;">
+    <div>状態: <span id="dbg-state">未開始</span></div>
+    <div>許可: <span id="dbg-perm">—</span></div>
+    <div>ピーク音量: <span id="dbg-peak">0.000</span></div>
+    <div>最終判定: <span id="dbg-last">—</span></div>
+    <div>受理: <span id="dbg-accept">0</span></div>
+    <div>却下: <span id="dbg-reject">0</span></div>
+  </div>
+  
+  <button class="ctrl-btn" id="settings-close" style="margin-top: 24px; width: 100%;">閉じる</button>
+</div>
+
+<!-- ── Dashboard ── -->
+<div class="dashboard" id="dashboard">
+  <div class="dashboard-header">
+    <h2>📊 今日のセッション</h2>
+    <button class="close-btn" id="dashboard-close">✕</button>
+  </div>
+  
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-card-label">発声回数</div>
+      <div class="stat-card-value" id="d-count">0<span class="stat-card-unit"> 回</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">セッション時間</div>
+      <div class="stat-card-value" id="d-duration">0<span class="stat-card-unit"> 分</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">平均発声時間</div>
+      <div class="stat-card-value" id="d-avgdur">—<span class="stat-card-unit"> ms</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">平均ピッチ</div>
+      <div class="stat-card-value" id="d-avgpitch">—<span class="stat-card-unit"> Hz</span></div>
+    </div>
+  </div>
+  
+  <div class="timeline">
+    <h3>時系列（30秒ごとの発声数）</h3>
+    <div class="timeline-bar" id="timeline-bar"></div>
+    <div class="timeline-axis">
+      <span>開始</span>
+      <span id="timeline-now">—</span>
+    </div>
+  </div>
+  
+  <div class="insights" id="insights">
+    <strong>観察</strong>: セッションを開始すると、ここに分析が表示されます。
+  </div>
+</div>
+
+<script>
+(function() {
+  // ── State ──
+  let audioCtx, analyser, mic, dataArray, freqArray, micStream;
+  let listening = false;
+  let paused = false;
+  let inVocalization = false;
+  let rabbitSpeaking = false;  // True while the friend rabbit is speaking — suppresses mic detection to prevent feedback
+  let rabbitSpeakingFailsafe = null;  // safety timer to force-clear rabbitSpeaking
+  let vocalStart = 0;
+  let vocalFrames = [];
+  let recordedSamples = [];
+  let bubbleCount = 0;
+  let acceptedCount = 0;
+  let rejectedCount = 0;
+  let streakCount = 0;
+  let streakTimer = null;
+  let lastVocalTime = 0;
+  let modelingTimer = null;
+  let modelingWordIndex = 0; // ローテーション用
+  let sessionStartTime = 0;
+  let peakLevel = 0;
+  let timelineData = [];
+  let stats = { totalDur: 0, pitches: [] };
+  let rafId;
+  let blinkTimer;
+  
+  // ── Elements ──
+  const welcome = document.getElementById('welcome');
+  const rabbit = document.getElementById('rabbit');
+  const mouth = document.getElementById('mouth');
+  const eyeL = document.getElementById('eye-l');
+  const eyeR = document.getElementById('eye-r');
+  const speech = document.getElementById('speech');
+  const bubbleContainer = document.getElementById('bubble-container');
+  const bubbleCountEl = document.getElementById('bubble-count');
+  const hudStreak = document.getElementById('hud-streak');
+  const streakCountEl = document.getElementById('streak-count');
+  const celebration = document.getElementById('celebration');
+  const dashboard = document.getElementById('dashboard');
+  const settings = document.getElementById('settings');
+  const dashboardBtn = document.getElementById('dashboard-btn');
+  const dashboardClose = document.getElementById('dashboard-close');
+  const settingsBtn = document.getElementById('settings-btn');
+  const settingsClose = document.getElementById('settings-close');
+  
+  const volThresh = document.getElementById('vol-thresh');
+  const volThreshNum = document.getElementById('vol-thresh-num');
+  const hnrThresh = document.getElementById('hnr-thresh');
+  const hnrThreshNum = document.getElementById('hnr-thresh-num');
+  const modelingOn = document.getElementById('modeling-on');
+  const strictMode = document.getElementById('strict-mode');
+  
+  const dbgState = document.getElementById('dbg-state');
+  const dbgPerm = document.getElementById('dbg-perm');
+  const dbgPeak = document.getElementById('dbg-peak');
+  const dbgLast = document.getElementById('dbg-last');
+  const dbgAccept = document.getElementById('dbg-accept');
+  const dbgReject = document.getElementById('dbg-reject');
+  
+  // ── Settings handlers ──
+  volThresh.addEventListener('input', () => {
+    volThreshNum.textContent = (volThresh.value / 1000).toFixed(3);
+  });
+  hnrThresh.addEventListener('input', () => {
+    hnrThreshNum.textContent = (hnrThresh.value / 100).toFixed(2);
+  });
+  volThresh.dispatchEvent(new Event('input'));
+  hnrThresh.dispatchEvent(new Event('input'));
+  
+  function getVolThresh() { return parseInt(volThresh.value) / 1000; }
+  function getHnrThresh() { return parseInt(hnrThresh.value) / 100; }
+  
+  // ── Panel handlers ──
+  dashboardBtn.addEventListener('click', () => {
+    updateDashboard();
+    dashboard.classList.add('open');
+  });
+  dashboardClose.addEventListener('click', () => dashboard.classList.remove('open'));
+  settingsBtn.addEventListener('click', () => settings.classList.add('open'));
+  settingsClose.addEventListener('click', () => settings.classList.remove('open'));
+  
+  // Pause / Resume logic
+  function togglePause() {
+    const btn = document.getElementById('pause-btn');
+    const overlay = document.getElementById('pause-overlay');
+    
+    if (!listening) {
+      return; // Not started yet
+    }
+    
+    paused = !paused;
+    
+    if (paused) {
+      // Pause
+      btn.innerHTML = '▶️ 再開';
+      overlay.classList.add('show');
+      // Stop modeling timer
+      if (modelingTimer) clearTimeout(modelingTimer);
+      // Stop any currently playing recorded audio
+      stopCurrentRecordedAudio();
+      // Reset rabbit-speaking flag so detection isn't permanently disabled
+      rabbitSpeaking = false;
+      if (rabbitSpeakingFailsafe) {
+        clearTimeout(rabbitSpeakingFailsafe);
+        rabbitSpeakingFailsafe = null;
+      }
+      // End any in-progress vocalization
+      if (inVocalization) {
+        inVocalization = false;
+      }
+    } else {
+      // Resume
+      btn.innerHTML = '⏸️ 一時停止';
+      overlay.classList.remove('show');
+      // Restart modeling timer
+      lastVocalTime = audioCtx.currentTime;
+      resetModelingTimer();
+    }
+  }
+  
+  document.getElementById('pause-btn').addEventListener('click', togglePause);
+  document.getElementById('resume-btn-big').addEventListener('click', togglePause);
+  
+  // Home button: confirm and return to welcome screen
+  document.getElementById('home-btn').addEventListener('click', () => {
+    if (!confirm('ホーム画面に戻りますか？\n（マイクは引き続き使えます）')) return;
+    
+    // Stop session but keep mic stream alive
+    listening = false;
+    if (modelingTimer) clearTimeout(modelingTimer);
+    if (rafId) cancelAnimationFrame(rafId);
+    paused = false;
+    // Stop any currently playing recorded audio
+    stopCurrentRecordedAudio();
+    // Reset rabbit-speaking flag (in case session ended mid-demo)
+    rabbitSpeaking = false;
+    if (rabbitSpeakingFailsafe) {
+      clearTimeout(rabbitSpeakingFailsafe);
+      rabbitSpeakingFailsafe = null;
+    }
+    
+    // Reset pause UI
+    const pauseBtn = document.getElementById('pause-btn');
+    pauseBtn.innerHTML = '⏸️ 一時停止';
+    document.getElementById('pause-overlay').classList.remove('show');
+    
+    // Hide settings/dashboard if open
+    settings.classList.remove('open');
+    dashboard.classList.remove('open');
+    
+    // Reset stats display
+    bubbleCount = 0;
+    bubbleCountEl.textContent = 0;
+    streakCount = 0;
+    document.getElementById('hud-streak').style.display = 'none';
+    if (streakTimer) clearTimeout(streakTimer);
+    stats = { count: 0, rejected: 0, totalDur: 0, pitches: [] };
+    timelineData = [];
+    
+    // Clear any in-progress vocalization
+    inVocalization = false;
+    recordedSamples = [];
+    vocalFrames = [];
+    
+    // Disconnect audio nodes
+    try {
+      if (mic) mic.disconnect();
+      if (audioCtx) audioCtx.close();
+    } catch (e) {}
+    audioCtx = null;
+    analyser = null;
+    mic = null;
+    
+    // Show welcome screen, start at step 2 (skip welcome step 1)
+    welcome.classList.remove('hidden');
+    showSetupStep(2);
+    buildSetupStageList();
+  });
+  
+  // Test modeling button
+  document.getElementById('test-modeling').addEventListener('click', () => {
+    if (!audioCtx) {
+      // Create temp audioCtx for test before main start
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    showModeling();
+  });
+  
+  // Recalibrate button
+  document.getElementById('recalibrate').addEventListener('click', () => {
+    if (!listening) {
+      alert('まず「はじめる」を押してください');
+      return;
+    }
+    dbgState.textContent = '再校正中...（2秒静かに）';
+    startCalibration();
+    setTimeout(() => {
+      dbgState.textContent = '聴取中';
+    }, 2000);
+  });
+  
+  // Test bubble button
+  document.getElementById('test-bubble').addEventListener('click', () => {
+    settings.classList.remove('open'); // close settings panel
+    setTimeout(() => {
+      // Simulate a vocalization with random pitch
+      const testVolume = 0.05;
+      const testPitch = 200 + Math.random() * 300;
+      const testDuration = 0.8;
+      createBubble(testVolume, testPitch, testDuration);
+      bounceRabbit();
+      rabbitMouthOpen();
+    }, 300);
+  });
+  
+  // ── Stage-based curriculum (linguistically ordered) ──
+  // Order based on Oller (2000), Vihman (2014), Kern & Davis (2009)
+  // For Japanese: Iwasaki (2008), MacArthur-Bates J-CDI norms
+  const stages = {
+    1: {
+      name: '開口母音',
+      words: ['あ'],  // base form, will be progressively lengthened
+      rationale: '/a/ は調音労力が最小で、世界中の言語で最初に出現する音。',
+      repeatType: 'lengthen'  // あ → あー → あーー → あーーー
+    },
+    2: {
+      name: '母音空間の拡張',
+      words: ['あー', 'いー', 'うー'],
+      rationale: '母音三角の3頂点。高低・前後の母音空間を獲得。',
+      repeatType: 'same'  // 同じ長さで4回反復
+    },
+    3: {
+      name: '両唇音の導入',
+      words: ['まー', 'ぱー', 'ばー'],
+      rationale: '両唇音は視覚的に観察しやすく、調音が単純で習得しやすい。',
+      repeatType: 'same'
+    },
+    4: {
+      name: 'CV反復（規準喃語）',
+      words: ['ま', 'ば', 'ぱ'],  // base CV, will be progressively repeated
+      rationale: 'Canonical babbling — 言語獲得の最重要前駆体（Patten 2014）。',
+      repeatType: 'multiply'  // ま → まま → ままま → まままま
+    },
+    5: {
+      name: '歯茎音の追加',
+      words: ['たー', 'なー', 'だー'],
+      rationale: '舌先を使う子音、両唇音の次に習得される。',
+      repeatType: 'same'
+    },
+    6: {
+      name: '初語（モーラ反復語）',
+      words: ['まんま', 'わんわん', 'ぶーぶー'],
+      rationale: '日本語のモーラ反復は初語パターンとして自然で記憶しやすい。',
+      repeatType: 'same'
+    },
+    7: {
+      name: '異なるCV結合',
+      words: ['バナナ', 'ねこ', 'りんご'],
+      rationale: '異なる音節の結合。語彙拡大の段階。',
+      repeatType: 'same'
+    },
+    8: {
+      name: '身近な名詞',
+      words: ['ママ', 'パパ', 'ねこ', 'いぬ', 'くるま', 'ボール', 'おはな', 'おみず'],
+      rationale: '語彙爆発期に必要な核となる名詞群（MacArthur-Bates J-CDI上位語）。プロソディ変化で文末イントネーションも体験。',
+      repeatType: 'prosodic'  // pitch/intonation varies across 4 repeats
+    },
+    9: {
+      name: '動作動詞',
+      words: ['きた', 'いる', 'たべる', 'のむ', 'ねる', 'いく', 'みる', 'おいで'],
+      rationale: '2語文の述語となる基本動詞群。動作・存在・知覚の3カテゴリーをカバー（Tomasello 2003）。',
+      repeatType: 'prosodic'
+    },
+    10: {
+      name: '属性・状態語',
+      words: ['おおきい', 'ちいさい', 'あつい', 'つめたい', 'おいしい', 'いたい'],
+      rationale: '形容詞の獲得は属性表現と感覚語彙の基盤。修飾的2語文への準備（Clark 2009）。',
+      repeatType: 'prosodic'
+    },
+    11: {
+      name: '2語文（並置文）',
+      // Each entry contains 2 words separated by a special marker '|'
+      // The marker becomes a pause when spoken (and visualized)
+      words: ['ママ|きた', 'ねこ|いる', 'ボール|ころころ', 'パパ|だっこ', 'ぼくの|くつ'],
+      rationale: '統語の萌芽。2つの意味を組み合わせる最初の文法段階（Brown 1973）。',
+      repeatType: 'pause'  // 2 words with a pause between them
+    }
+  };
+  
+  let currentStage = 1; // default starting stage
+  
+  function applyStage(stageNum) {
+    const stage = stages[stageNum];
+    if (!stage) return;
+    currentStage = stageNum;
+    document.getElementById('modeling-words').value = stage.words.join('\n');
+    modelingWordIndex = 0; // reset rotation
+    
+    // Visual feedback: highlight selected stage button
+    document.querySelectorAll('.stage-btn').forEach(btn => {
+      const isSelected = parseInt(btn.dataset.stage) === stageNum;
+      btn.style.background = isSelected ? '#FFE066' : 'white';
+      btn.style.borderColor = isSelected ? '#F2A65A' : '#E5DFD6';
+      btn.style.borderWidth = isSelected ? '2px' : '1.5px';
+    });
+    
+    // Save preference to localStorage if available
+    try {
+      localStorage.setItem('bubbleGarden_stage', stageNum);
+    } catch (e) {}
+    
+    // Update recording list to show this stage's words
+    updateRecordingList();
+  }
+  
+  document.querySelectorAll('.stage-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const stageNum = parseInt(btn.dataset.stage);
+      applyStage(stageNum);
+      
+      // ── Trigger immediate demo when user picks a course ──
+      // Only if listening (mic active) and not paused
+      if (listening && !paused) {
+        // Close settings panel so user can see the demo
+        settings.classList.remove('open');
+        // Cancel any pending modeling timer
+        if (modelingTimer) clearTimeout(modelingTimer);
+        // Show demo immediately (slight delay for panel close animation)
+        setTimeout(() => {
+          showModeling();
+        }, 400);
+        // Reset modeling timer for next cycle (10s after demo finishes)
+        // The full demo takes ~10 seconds, so schedule next at +20s
+        // (modelingTimer will be reset properly when demo ends or child speaks)
+      }
+    });
+  });
+  
+  // Restore previous stage selection if any, otherwise apply Stage 1
+  try {
+    const savedStage = parseInt(localStorage.getItem('bubbleGarden_stage'));
+    if (savedStage >= 1 && savedStage <= 7) {
+      applyStage(savedStage);
+    } else {
+      applyStage(1);
+    }
+  } catch (e) {
+    applyStage(1);
+  }
+  
+  // ── Rabbit animations ──
+  function blinkRabbit() {
+    eyeL.classList.add('blinking');
+    eyeR.classList.add('blinking');
+    setTimeout(() => {
+      eyeL.classList.remove('blinking');
+      eyeR.classList.remove('blinking');
+    }, 150);
+    blinkTimer = setTimeout(blinkRabbit, 2000 + Math.random() * 3000);
+  }
+  
+  function bounceRabbit() {
+    rabbit.classList.remove('bouncing');
+    void rabbit.offsetWidth; // trigger reflow
+    rabbit.classList.add('bouncing');
+  }
+  
+  function rabbitMouthOpen() {
+    mouth.classList.add('open');
+    setTimeout(() => mouth.classList.remove('open'), 400);
+  }
+  
+  // ── Generate vowel sound with audio synthesis ──
+  // Vowel formant frequencies (Japanese, child-like 1-3yo)
+  // Source: Hillenbrand 1995, adjusted upward 1.3-1.5x for young child vocal tract
+  const vowelFormants = {
+    'あ': { F1: 950,  F2: 1500, F3: 2900, label: 'a' },
+    'い': { F1: 400,  F2: 2800, F3: 3400, label: 'i' },
+    'う': { F1: 450,  F2: 1100, F3: 2700, label: 'u' },
+    'え': { F1: 600,  F2: 2400, F3: 2900, label: 'e' },
+    'お': { F1: 550,  F2: 950,  F3: 2700, label: 'o' },
+  };
+  
+  // Detect which vowel a word represents (uses first hiragana)
+  function detectVowel(word) {
+    const ch = word.charAt(0);
+    if (vowelFormants[ch]) return ch;
+    const cvToVowel = {
+      'か':'あ','き':'い','く':'う','け':'え','こ':'お',
+      'が':'あ','ぎ':'い','ぐ':'う','げ':'え','ご':'お',
+      'さ':'あ','し':'い','す':'う','せ':'え','そ':'お',
+      'ざ':'あ','じ':'い','ず':'う','ぜ':'え','ぞ':'お',
+      'た':'あ','ち':'い','つ':'う','て':'え','と':'お',
+      'だ':'あ','ぢ':'い','づ':'う','で':'え','ど':'お',
+      'な':'あ','に':'い','ぬ':'う','ね':'え','の':'お',
+      'は':'あ','ひ':'い','ふ':'う','へ':'え','ほ':'お',
+      'ば':'あ','び':'い','ぶ':'う','べ':'え','ぼ':'お',
+      'ぱ':'あ','ぴ':'い','ぷ':'う','ぺ':'え','ぽ':'お',
+      'ま':'あ','み':'い','む':'う','め':'え','も':'お',
+      'や':'あ','ゆ':'う','よ':'お',
+      'ら':'あ','り':'い','る':'う','れ':'え','ろ':'お',
+      'わ':'あ',
+    };
+    return cvToVowel[ch] || 'あ';
+  }
+  
+  // Play a vowel sound for given duration (in seconds)
+  // Uses parallel formant synthesis: one source feeds 3 parallel formant filters
+  // (much more natural than single bandpass filter approach)
+  function playAhhSound(duration, word) {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    duration = duration || 0.9;
+    
+    const vowel = word ? detectVowel(word) : 'あ';
+    const formants = vowelFormants[vowel] || vowelFormants['あ'];
+    
+    // Master gain envelope (smooth volume curve)
+    const master = audioCtx.createGain();
+    master.gain.setValueAtTime(0, now);
+    master.gain.linearRampToValueAtTime(0.35, now + 0.06);
+    master.gain.linearRampToValueAtTime(0.32, now + duration - 0.12);
+    master.gain.linearRampToValueAtTime(0, now + duration);
+    master.connect(audioCtx.destination);
+    
+    // Fundamental frequency: child-like pitch (~ 320 Hz)
+    // with subtle natural vibrato (4-6 Hz, ±3%)
+    const f0 = 320;
+    
+    // Single rich sawtooth source for the voice
+    // (sawtooth has natural harmonics — no need to stack oscillators)
+    const source = audioCtx.createOscillator();
+    source.type = 'sawtooth';
+    source.frequency.setValueAtTime(f0, now);
+    
+    // Add natural pitch contour: slight rise, then fall (like real vocalization)
+    source.frequency.linearRampToValueAtTime(f0 * 1.04, now + 0.15);
+    source.frequency.linearRampToValueAtTime(f0 * 1.02, now + duration * 0.6);
+    source.frequency.linearRampToValueAtTime(f0 * 0.94, now + duration);
+    
+    // Vibrato LFO (subtle, 5 Hz, ±2%)
+    const vibrato = audioCtx.createOscillator();
+    const vibratoGain = audioCtx.createGain();
+    vibrato.frequency.value = 5;
+    vibratoGain.gain.value = f0 * 0.015;
+    vibrato.connect(vibratoGain).connect(source.frequency);
+    vibrato.start(now);
+    vibrato.stop(now + duration);
+    
+    // Source gain (controls overall loudness of the buzz)
+    const sourceGain = audioCtx.createGain();
+    sourceGain.gain.value = 0.5;
+    source.connect(sourceGain);
+    
+    // ── Three parallel formant filters ──
+    // Each is a peaking filter that boosts its formant frequency
+    // (peaking filter is more natural than bandpass — preserves harmonics)
+    
+    function makeFormantFilter(freq, gainDB, Q) {
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'peaking';
+      filter.frequency.value = freq;
+      filter.gain.value = gainDB;
+      filter.Q.value = Q;
+      return filter;
+    }
+    
+    // F1, F2, F3 in parallel branches
+    const branches = [
+      { freq: formants.F1, gainDB: 18, Q: 8,  branchGain: 1.0 },
+      { freq: formants.F2, gainDB: 16, Q: 10, branchGain: 0.8 },
+      { freq: formants.F3, gainDB: 12, Q: 12, branchGain: 0.4 },
+    ];
+    
+    branches.forEach(b => {
+      const filter = makeFormantFilter(b.freq, b.gainDB, b.Q);
+      const branchGainNode = audioCtx.createGain();
+      branchGainNode.gain.value = b.branchGain;
+      // sourceGain → filter → branchGain → master
+      sourceGain.connect(filter).connect(branchGainNode).connect(master);
+    });
+    
+    // High-frequency rolloff (low-pass at ~5kHz to remove harsh harmonics)
+    const lowpass = audioCtx.createBiquadFilter();
+    lowpass.type = 'lowpass';
+    lowpass.frequency.value = 5000;
+    lowpass.Q.value = 0.7;
+    
+    source.start(now);
+    source.stop(now + duration);
+  }
+  
+  // Get the next modeling word from the textarea (rotation)
+  // ========== Voice Recording Management ==========
+  // Recordings are stored in IndexedDB-like manner via localStorage as base64
+  // Key format: recording_<word> (e.g. recording_あ)
+  // Special key for praise: recording___praise__
+  
+  const PRAISE_KEY = '__praise__';
+  const GREETING_KEY = '__greeting__';
+  
+  let mediaRecorder = null;
+  let recordingChunks = [];
+  let recordingForWord = null;
+  
+  function getRecordingForWord(word) {
+    if (!word) return null;
+    try {
+      // Try exact match first
+      const exact = localStorage.getItem('recording_' + word);
+      if (exact) return exact;
+      // Try trimmed
+      const trimmed = word.trim();
+      if (trimmed !== word) {
+        const t = localStorage.getItem('recording_' + trimmed);
+        if (t) return t;
+      }
+      // Try Unicode normalization (NFC/NFKC) — handles different encodings of same character
+      try {
+        const nfc = trimmed.normalize('NFC');
+        if (nfc !== trimmed) {
+          const n = localStorage.getItem('recording_' + nfc);
+          if (n) return n;
+        }
+      } catch (e) {}
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  function saveRecordingForWord(word, base64Audio) {
+    try {
+      // Normalize the key so save/load always use the same encoding
+      let key = word;
+      try { key = word.trim().normalize('NFC'); } catch (e) {}
+      localStorage.setItem('recording_' + key, base64Audio);
+      return true;
+    } catch (e) {
+      console.error('Storage failed', e);
+      alert('録音の保存に失敗しました（容量不足の可能性）');
+      return false;
+    }
+  }
+  
+  function deleteRecordingForWord(word) {
+    try {
+      // Try to delete both the original and the normalized form
+      localStorage.removeItem('recording_' + word);
+      try {
+        const norm = word.trim().normalize('NFC');
+        if (norm !== word) localStorage.removeItem('recording_' + norm);
+      } catch (e) {}
+    } catch (e) {}
+  }
+  
+  // Play a recorded audio (returns Promise that resolves when finished)
+  // Play recorded audio with optional playback rate (1.0 = normal, <1 slower/lower, >1 faster/higher)
+  // ── Track the currently playing recording so external callers can stop it ──
+  let currentRecordedAudio = null;
+  
+  function stopCurrentRecordedAudio() {
+    if (currentRecordedAudio) {
+      try {
+        currentRecordedAudio.onended = null;
+        currentRecordedAudio.onerror = null;
+        currentRecordedAudio.pause();
+      } catch (e) { /* ignore */ }
+      currentRecordedAudio = null;
+    }
+    // Always re-enable detection when audio stops
+    rabbitSpeaking = false;
+    if (rabbitSpeakingFailsafe) {
+      clearTimeout(rabbitSpeakingFailsafe);
+      rabbitSpeakingFailsafe = null;
+    }
+  }
+  
+  function playRecordedAudio(base64Audio, options) {
+    options = options || {};
+    return new Promise((resolve, reject) => {
+      try {
+        const audio = new Audio(base64Audio);
+        currentRecordedAudio = audio;
+        if (typeof options.rate === 'number') {
+          audio.playbackRate = options.rate;
+          audio.preservesPitch = false;
+          if (audio.mozPreservesPitch !== undefined) audio.mozPreservesPitch = false;
+          if (audio.webkitPreservesPitch !== undefined) audio.webkitPreservesPitch = false;
+        }
+        
+        // ── Suppress mic detection only while THIS clip is actually playing ──
+        // This way, the silence between repetitions allows the child to be heard.
+        const cleanupFlag = () => {
+          rabbitSpeaking = false;
+          if (rabbitSpeakingFailsafe) {
+            clearTimeout(rabbitSpeakingFailsafe);
+            rabbitSpeakingFailsafe = null;
+          }
+        };
+        
+        audio.onended = () => {
+          cleanupFlag();
+          if (currentRecordedAudio === audio) currentRecordedAudio = null;
+          resolve();
+        };
+        audio.onerror = (e) => {
+          console.error('[playRecordedAudio] onerror:', e, audio.error);
+          cleanupFlag();
+          if (currentRecordedAudio === audio) currentRecordedAudio = null;
+          reject(new Error('Playback failed'));
+        };
+        
+        // Set the flag right when audio starts playing
+        rabbitSpeaking = true;
+        // Safety net: clear flag after 8s in case onended never fires for this clip
+        if (rabbitSpeakingFailsafe) clearTimeout(rabbitSpeakingFailsafe);
+        rabbitSpeakingFailsafe = setTimeout(() => {
+          if (rabbitSpeaking) {
+            console.warn('[failsafe] rabbitSpeaking stuck on single clip — forcing reset');
+            rabbitSpeaking = false;
+          }
+        }, 8000);
+        
+        const playPromise = audio.play();
+        if (playPromise && playPromise.catch) {
+          playPromise.catch((err) => {
+            console.error('[playRecordedAudio] play() rejected:', err.name, err.message);
+            cleanupFlag();
+            if (currentRecordedAudio === audio) currentRecordedAudio = null;
+            reject(err);
+          });
+        }
+      } catch (e) {
+        console.error('[playRecordedAudio] sync error:', e);
+        rabbitSpeaking = false;
+        reject(e);
+      }
+    });
+  }
+  
+  async function startRecording(word, buttonElement) {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      return; // Already recording
+    }
+    if (!micStream) {
+      alert('マイクが準備できていません。ページを再読み込みしてください。');
+      return;
+    }
+    try {
+      recordingChunks = [];
+      // Use the already-acquired global mic stream
+      mediaRecorder = new MediaRecorder(micStream);
+      recordingForWord = word;
+      
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordingChunks.push(e.data);
+      };
+      
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(recordingChunks, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = reader.result;
+          saveRecordingForWord(recordingForWord, base64);
+          updateRecordingList();
+        };
+        reader.readAsDataURL(blob);
+        // DO NOT stop tracks — micStream is shared with audio detection
+      };
+      
+      mediaRecorder.start();
+      buttonElement.textContent = '⏹ 止める';
+      buttonElement.style.background = '#E94F37';
+      buttonElement.style.color = 'white';
+    } catch (e) {
+      alert('録音を開始できませんでした: ' + e.message);
+    }
+  }
+  
+  function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+      mediaRecorder = null;
+    }
+  }
+  
+  // Build the recording list for the current stage's words
+  function updateRecordingList() {
+    const list = document.getElementById('recording-list');
+    if (!list) return;
+    
+    const stage = stages[currentStage];
+    if (!stage) {
+      list.innerHTML = '<div style="font-size: 12px; color: #888;">コースを選んでください</div>';
+      return;
+    }
+    
+    // Build word list — for stage 1 (lengthen), show all variations
+    // For stage 4 (multiply), show all syllable variations
+    // For others, show the base words
+    let wordsToRecord = [];
+    if (stage.repeatType === 'lengthen') {
+      const base = stage.words[0];
+      wordsToRecord = [base, base + 'ー', base + 'ーー', base + 'ーーー'];
+    } else if (stage.repeatType === 'multiply') {
+      stage.words.forEach(w => {
+        const base = w.replace(/ー+$/, '');
+        wordsToRecord.push(base, base + base, base + base + base, base + base + base + base);
+      });
+    } else {
+      wordsToRecord = [...stage.words];
+    }
+    
+    list.innerHTML = '';
+    wordsToRecord.forEach(word => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display: flex; align-items: center; gap: 6px; padding: 6px; background: white; border-radius: 8px; border: 1px solid #E5DFD6;';
+      
+      const label = document.createElement('div');
+      label.style.cssText = 'flex: 1; font-size: 16px; font-weight: 600; color: #0B2E4F; padding-left: 4px;';
+      label.textContent = word;
+      
+      const status = document.createElement('div');
+      status.style.cssText = 'font-size: 11px; color: #4A4A4A;';
+      
+      const recBtn = document.createElement('button');
+      recBtn.className = 'ctrl-btn';
+      recBtn.style.cssText = 'font-size: 11px; padding: 6px 10px; min-width: 70px;';
+      
+      const playBtn = document.createElement('button');
+      playBtn.className = 'ctrl-btn';
+      playBtn.style.cssText = 'font-size: 11px; padding: 6px 10px;';
+      playBtn.textContent = '▶ 試聴';
+      
+      const delBtn = document.createElement('button');
+      delBtn.className = 'ctrl-btn';
+      delBtn.style.cssText = 'font-size: 11px; padding: 6px 8px;';
+      delBtn.textContent = '🗑';
+      
+      const existing = getRecordingForWord(word);
+      if (existing) {
+        status.textContent = '✓ 録音済';
+        status.style.color = '#00A19A';
+        recBtn.textContent = '🔁 録り直し';
+        playBtn.style.display = '';
+        delBtn.style.display = '';
+      } else {
+        status.textContent = '未録音';
+        status.style.color = '#888';
+        recBtn.textContent = '🎙 録音';
+        playBtn.style.display = 'none';
+        delBtn.style.display = 'none';
+      }
+      
+      recBtn.addEventListener('click', () => {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+          stopRecording();
+        } else {
+          startRecording(word, recBtn);
+        }
+      });
+      
+      playBtn.addEventListener('click', () => {
+        const audio = getRecordingForWord(word);
+        if (audio) playRecordedAudio(audio);
+      });
+      
+      delBtn.addEventListener('click', () => {
+        if (confirm('「' + word + '」の録音を削除しますか？')) {
+          deleteRecordingForWord(word);
+          updateRecordingList();
+        }
+      });
+      
+      row.appendChild(label);
+      row.appendChild(status);
+      row.appendChild(recBtn);
+      row.appendChild(playBtn);
+      row.appendChild(delBtn);
+      list.appendChild(row);
+    });
+  }
+  
+  // Update list when stage changes
+  // (called from applyStage indirectly via observer below)
+  
+  function getNextModelingWord() {
+    const textarea = document.getElementById('modeling-words');
+    const text = textarea.value.trim();
+    if (!text) return 'あー'; // fallback
+    
+    const words = text.split('\n')
+      .map(w => w.trim())
+      .filter(w => w.length > 0);
+    
+    if (words.length === 0) return 'あー';
+    
+    const word = words[modelingWordIndex % words.length];
+    modelingWordIndex++;
+    return word;
+  }
+  
+  // ── Modeling: friend rabbit demonstrates a word ──
+  // Helper: speak one word with sound + mouth animation + bubble
+  // repeatType: 'lengthen' | 'multiply' | 'same'
+  // repeatIndex: 0-based index in the 4-repeat sequence (used for visual scaling)
+  function speakOnce(word, friendRabbit, friendMouth, friendSpeech, repeatType, repeatIndex, callback) {
+    friendMouth.classList.add('open');
+    friendSpeech.classList.add('show');
+    
+    let speechRate, bubbleVolume, durationFactor;
+    
+    if (repeatType === 'lengthen') {
+      const longMarks = repeatIndex;
+      speechRate = Math.max(0.30, 0.70 - longMarks * 0.13);
+      bubbleVolume = 0.04 + longMarks * 0.025;
+      durationFactor = 1.0 + longMarks * 0.5;
+    } else if (repeatType === 'multiply') {
+      speechRate = 0.65;
+      bubbleVolume = 0.04 + repeatIndex * 0.020;
+      durationFactor = 1.0 + repeatIndex * 0.3;
+    } else if (repeatType === 'pause') {
+      // Stage 11: 2-word phrase, each word as its own pulse
+      speechRate = 0.70;
+      bubbleVolume = 0.05;
+      durationFactor = 1.0;
+    } else if (repeatType === 'prosodic') {
+      // Stages 8-10: vary pitch/intonation across the 4 repeats
+      // Index 0,1: normal; Index 2: question (higher pitch); Index 3: declarative (lower pitch)
+      speechRate = 0.70;
+      bubbleVolume = 0.06;
+      durationFactor = 1.0;
+    } else {
+      speechRate = 0.70;
+      bubbleVolume = 0.06;
+      durationFactor = 1.0;
+    }
+    
+    // ── 2-word phrase handling (Stage 8) ──
+    // Strict pause: word1 plays fully → 1.4s silence → word2 plays
+    if (repeatType === 'pause' && word.includes('|')) {
+      const parts = word.split('|').map(p => p.trim()).filter(p => p);
+      lastDemoWord = word;
+      const part1 = parts[0];
+      const part2 = parts[1];
+      const audio1 = getRecordingForWord(part1);
+      const audio2 = getRecordingForWord(part2);
+      
+      // Debug log so we can see in the console what's happening
+      console.log('[2-word] phrase:', word, '| part1:', JSON.stringify(part1), 'audio:', audio1 ? 'FOUND' : 'MISSING', '| part2:', JSON.stringify(part2), 'audio:', audio2 ? 'FOUND' : 'MISSING');
+      // List all recording keys for diagnosis
+      try {
+        const keys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('recording_')) keys.push(k.substring(10));
+        }
+        console.log('[2-word] available recording keys:', keys);
+      } catch (e) {}
+      
+      const PAUSE_MS = 1400;        // strict silence between words
+      const FALLBACK_DUR_1 = 800;   // assumed duration if no recording
+      const FALLBACK_DUR_2 = 800;
+      const TAIL_AFTER_WORD2 = 400; // small tail before mouth closes
+      const PLAYBACK_TIMEOUT = 3000; // safety net: never wait longer than 3s for a word to finish
+      
+      // Helper that wraps an audio playback promise with a timeout fallback
+      const playWithTimeout = (audio, fallbackDur) => {
+        if (!audio) return new Promise(r => setTimeout(r, fallbackDur));
+        return Promise.race([
+          playRecordedAudio(audio).catch(() => null),
+          new Promise(r => setTimeout(r, PLAYBACK_TIMEOUT))
+        ]);
+      };
+      
+      // ── Word 1: visual + audio, then await its end ──
+      // Show visual just slightly after the audio starts so they appear together
+      setTimeout(() => {
+        if (stageUsesImages()) {
+          createImageFrom(friendRabbit, part1);
+        } else {
+          createBubbleFrom(friendRabbit, bubbleVolume, 350, durationFactor);
+        }
+      }, 150);
+      
+      const playWord1 = playWithTimeout(audio1, FALLBACK_DUR_1);
+      
+      // After word 1 finishes → strict 1.4 second pause → word 2
+      playWord1.then(() => {
+        setTimeout(() => {
+          // Word 2: visual + audio
+          if (stageUsesImages()) {
+            createImageFrom(friendRabbit, part2);
+          } else {
+            createBubbleFrom(friendRabbit, bubbleVolume, 380, durationFactor);
+          }
+          
+          const playWord2 = playWithTimeout(audio2, FALLBACK_DUR_2);
+          
+          // After word 2 finishes → close mouth + callback
+          playWord2.then(() => {
+            setTimeout(() => {
+              friendMouth.classList.remove('open');
+              friendSpeech.classList.remove('show');
+              if (callback) callback();
+            }, TAIL_AFTER_WORD2);
+          });
+        }, PAUSE_MS);
+      });
+      return;
+    }
+    
+    // ── Standard playback (Stages 1-7, 8-10) ──
+    // Track this word for child's vocalization response
+    lastDemoWord = word;
+    
+    const recordedAudio = getRecordingForWord(word);
+    
+    // For prosodic stages (8-10), vary pitch by repeat index
+    let playbackOptions = null;
+    if (repeatType === 'prosodic') {
+      const rates = [1.0, 1.0, 1.15, 0.88];
+      playbackOptions = { rate: rates[repeatIndex] || 1.0 };
+    }
+    
+    if (recordedAudio) {
+      playRecordedAudio(recordedAudio, playbackOptions).catch(() => {});
+    }
+    
+    setTimeout(() => {
+      if (stageUsesImages()) {
+        // Stage 6+: show word image
+        // Strip "ー" extensions for image lookup
+        const baseWord = word.replace(/ー+$/, '');
+        if (!createImageFrom(friendRabbit, baseWord)) {
+          // Fallback to bubble if no image found
+          createBubbleFrom(friendRabbit, bubbleVolume, 350, durationFactor);
+        }
+      } else {
+        createBubbleFrom(friendRabbit, bubbleVolume, 350, durationFactor);
+      }
+    }, 250);
+    
+    const speechDuration = recordedAudio ? 2500 : 1500;
+    setTimeout(() => {
+      friendMouth.classList.remove('open');
+      friendSpeech.classList.remove('show');
+      if (callback) callback();
+    }, speechDuration);
+  }
+  
+  // Generate variations of a word based on repeat type
+  // - 'lengthen':  あ → あー → あーー → あーーー  (Stage 1: progressive lengthening)
+  // - 'multiply':  ま → まま → ままま → まままま  (Stage 4: syllable multiplication for canonical babbling)
+  // - 'same':      あー → あー → あー → あー  (Stages 2,3,5,6,7: same-length repetition)
+  function generateVariations(word, count, type) {
+    const variations = [];
+    
+    if (type === 'lengthen') {
+      // Strip trailing "ー" for base, then add more
+      const baseWord = word.replace(/ー+$/, '');
+      for (let i = 0; i < count; i++) {
+        variations.push(baseWord + 'ー'.repeat(i));
+      }
+    } else if (type === 'multiply') {
+      // Multiply the syllable: ま → まま → ままま → まままま
+      const baseSyllable = word.replace(/ー+$/, '');
+      for (let i = 0; i < count; i++) {
+        variations.push(baseSyllable.repeat(i + 1));
+      }
+    } else if (type === 'pause') {
+      // 2-word phrase with pause between: just repeat as-is (the pause is handled in playback)
+      for (let i = 0; i < count; i++) {
+        variations.push(word);
+      }
+    } else if (type === 'prosodic') {
+      // Prosodic variation: same word, but pitch/intonation varies across the 4 repeats
+      // The visual hint (↑ / ↓) is added in showModeling, audio handling in speakOnce
+      for (let i = 0; i < count; i++) {
+        variations.push(word);
+      }
+    } else {
+      // 'same' - just repeat the word as-is
+      for (let i = 0; i < count; i++) {
+        variations.push(word);
+      }
+    }
+    return variations;
+  }
+  
+  function getCurrentRepeatType() {
+    const stage = stages[currentStage];
+    return stage ? (stage.repeatType || 'same') : 'same';
+  }
+  
+  function showModeling() {
+    if (!modelingOn.checked) return;
+    if (paused) return;
+    
+    // Clear any pending speech synthesis to prevent queue buildup
+    if ('speechSynthesis' in window) {
+      try {
+        speechSynthesis.cancel();
+      } catch (e) {}
+    }
+    // Stop any lingering recorded audio from previous demo
+    stopCurrentRecordedAudio();
+    
+    const word = getNextModelingWord();
+    
+    const friendRabbit = document.getElementById('friend-rabbit');
+    const friendMouth = document.getElementById('friend-mouth');
+    const friendSpeech = document.getElementById('friend-speech');
+    
+    friendRabbit.classList.add('visible');
+    
+    // 4 repetitions, each progressively longer:
+    //   1st: "あ"     (shortest)
+    //   2nd: "あー"
+    //   3rd: "あーー"
+    //   4th: "あーーー" (longest)
+    const REPEAT_COUNT = 4;
+    const PAUSE_BETWEEN = 700;
+    const repeatType = getCurrentRepeatType();
+    const variations = generateVariations(word, REPEAT_COUNT, repeatType);
+    
+    setTimeout(() => {
+      let repeatIndex = 0;
+      
+      const doRepeat = () => {
+        if (paused) {
+          friendRabbit.classList.remove('visible');
+          rabbitSpeaking = false;
+          if (rabbitSpeakingFailsafe) {
+            clearTimeout(rabbitSpeakingFailsafe);
+            rabbitSpeakingFailsafe = null;
+          }
+          return;
+        }
+        
+        const currentWord = variations[repeatIndex];
+        
+        // Update speech bubble for this iteration
+        // For pause-type (2-word phrases), display "|" as "・" with spacing
+        let displayText = currentWord.replace(/\|/g, '  ・  ');
+        // For prosodic-type (Stages 8-10), add intonation arrow on repeat 3 and 4
+        if (repeatType === 'prosodic') {
+          if (repeatIndex === 2) displayText = displayText + ' ↑?';
+          else if (repeatIndex === 3) displayText = displayText + ' ↓';
+        }
+        friendSpeech.textContent = displayText;
+        if (displayText.length > 8) {
+          friendSpeech.style.fontSize = '36px';
+        } else if (displayText.length > 5) {
+          friendSpeech.style.fontSize = '44px';
+        } else {
+          friendSpeech.style.fontSize = '56px';
+        }
+        
+        speakOnce(currentWord, friendRabbit, friendMouth, friendSpeech, repeatType, repeatIndex, () => {
+          repeatIndex++;
+          if (repeatIndex < REPEAT_COUNT) {
+            setTimeout(doRepeat, PAUSE_BETWEEN);
+          } else {
+            // All repetitions done — exit and schedule next demo
+            setTimeout(() => {
+              friendRabbit.classList.remove('visible');
+              // ── Re-enable mic detection (rabbit demo finished) ──
+              rabbitSpeaking = false;
+              if (rabbitSpeakingFailsafe) {
+                clearTimeout(rabbitSpeakingFailsafe);
+                rabbitSpeakingFailsafe = null;
+              }
+              // ── Schedule the next demo (10 seconds from now) ──
+              if (listening && !paused) {
+                resetModelingTimer();
+              }
+            }, 800);
+          }
+        });
+      };
+      
+      doRepeat();
+    }, 600);
+  }
+  
+  // Modified createBubble that accepts a custom origin element
+  // Create a word image emanating from a rabbit element (friend rabbit during demo)
+  function createImageFrom(originElement, word) {
+    const rect = originElement.getBoundingClientRect();
+    const startX = rect.left + rect.width / 2;
+    const startY = rect.top + rect.height * 0.4;
+    return createWordImage(word, startX, startY, { size: 180 });
+  }
+  
+  function createBubbleFrom(originElement, volume, pitch, duration) {
+    const sizeMin = 50, sizeMax = 150;
+    const size = Math.min(sizeMax, sizeMin + volume * 2000);
+    
+    let hue = 200;
+    if (pitch > 0) {
+      hue = 200 + ((pitch - 80) / 520) * 160;
+    }
+    
+    const rect = originElement.getBoundingClientRect();
+    const startX = rect.left + rect.width / 2;
+    const startY = rect.top + rect.height * 0.4;
+    
+    const bubble = document.createElement('div');
+    bubble.style.cssText = `
+      position: fixed;
+      left: ${startX - size/2}px;
+      top: ${startY - size/2}px;
+      width: ${size}px;
+      height: ${size}px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, 
+        rgba(255,255,255,0.95) 0%,
+        hsla(${hue}, 80%, 70%, 0.5) 40%,
+        hsla(${hue}, 80%, 60%, 0.4) 70%);
+      box-shadow: 
+        inset 0 0 20px rgba(255,255,255,0.4),
+        0 0 20px hsla(${hue}, 80%, 60%, 0.4);
+      pointer-events: none;
+      z-index: 1000;
+      will-change: transform;
+    `;
+    
+    const highlight = document.createElement('div');
+    highlight.style.cssText = `
+      position: absolute;
+      top: 15%;
+      left: 20%;
+      width: 30%;
+      height: 30%;
+      background: rgba(255,255,255,0.7);
+      border-radius: 50%;
+      filter: blur(2px);
+    `;
+    bubble.appendChild(highlight);
+    document.body.appendChild(bubble);
+    
+    // Play pop sound IMMEDIATELY when bubble appears
+    playPopSound(pitch);
+    
+    const drift = (Math.random() - 0.5) * 300;
+    const speed = Math.max(2, 5 - duration);
+    
+    try {
+      const anim = bubble.animate([
+        { transform: 'translate(0, 0) scale(0.3)', opacity: 0 },
+        { transform: 'translate(0, -20px) scale(1)', opacity: 1, offset: 0.15 },
+        { transform: `translate(${drift}px, -${window.innerHeight}px) scale(1)`, opacity: 1, offset: 0.9 },
+        { transform: `translate(${drift}px, -${window.innerHeight}px) scale(1.3)`, opacity: 0 }
+      ], {
+        duration: speed * 1000,
+        easing: 'linear',
+        fill: 'forwards'
+      });
+      
+      anim.onfinish = () => {
+        const finalRect = bubble.getBoundingClientRect();
+        if (finalRect.left >= 0) {
+          createSparkle(finalRect.left + finalRect.width / 2, finalRect.top + finalRect.height / 2);
+        } else {
+          createSparkle(startX + drift, 50);
+        }
+        bubble.remove();
+        // No additional sound on pop — the appearance sound is enough
+      };
+    } catch (e) {
+      setTimeout(() => bubble.remove(), 3000);
+    }
+    
+    bubbleCount++;
+    bubbleCountEl.textContent = bubbleCount;
+  }
+  
+  function resetModelingTimer() {
+    if (modelingTimer) clearTimeout(modelingTimer);
+    if (paused) return;
+    modelingTimer = setTimeout(showModeling, 15000);
+  }
+  
+  // ── Setup wizard: Step 1 → Step 2 → Step 3 → Start playing ──
+  
+  function showSetupStep(stepNum) {
+    document.getElementById('setup-step-1').style.display = 'none';
+    document.getElementById('setup-step-2').style.display = 'none';
+    document.getElementById('setup-step-3').style.display = 'none';
+    document.getElementById('setup-step-' + stepNum).style.display = 'flex';
+  }
+  
+  // Step 1 → Step 2 (acquires the mic stream once for the entire app lifecycle)
+  document.getElementById('next-to-stage').addEventListener('click', async () => {
+    const btn = document.getElementById('next-to-stage');
+    const originalText = btn.textContent;
+    
+    // If we already have the stream, just go to step 2
+    if (micStream) {
+      buildSetupStageList();
+      showSetupStep(2);
+      return;
+    }
+    
+    btn.textContent = 'マイクを準備中...';
+    btn.disabled = true;
+    
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+      });
+      // Mic acquired successfully — proceed to next step
+      btn.textContent = originalText;
+      btn.disabled = false;
+      buildSetupStageList();
+      showSetupStep(2);
+    } catch (e) {
+      btn.textContent = originalText;
+      btn.disabled = false;
+      alert('マイクへのアクセスを許可してください。\nブラウザの設定からマイクを許可した後、ページを再読み込みしてください。\n\nエラー: ' + e.message);
+    }
+  });
+  
+  // Build stage selection list in setup
+  function buildSetupStageList() {
+    const list = document.getElementById('setup-stage-list');
+    list.innerHTML = '';
+    Object.keys(stages).forEach(num => {
+      const stage = stages[num];
+      const btn = document.createElement('button');
+      btn.className = 'setup-stage-btn';
+      
+      let example = '';
+      if (stage.repeatType === 'lengthen') {
+        const w = stage.words[0];
+        example = `${w} → ${w}ー → ${w}ーー → ${w}ーーー（段階的に長く）`;
+      } else if (stage.repeatType === 'multiply') {
+        const w = stage.words[0];
+        example = `${w} → ${w}${w} → ${w}${w}${w} → ${w}${w}${w}${w}（音節を増やす）`;
+      } else if (stage.repeatType === 'pause') {
+        example = stage.words.map(w => w.replace(/\|/g, '・')).join(' / ') + '（語間ポーズ）';
+      } else if (stage.repeatType === 'prosodic') {
+        const sample = stage.words.slice(0, 3).join(' / ');
+        example = `${sample}... — 普通→普通→上昇↑→下降↓（プロソディ変化）`;
+      } else {
+        example = stage.words.join(' / ') + '（4回反復）';
+      }
+      
+      btn.innerHTML = `
+        <div class="num">コース ${num}</div>
+        <div class="title">${stage.name}</div>
+        <div class="desc">${stage.rationale}</div>
+        <div class="example">${example}</div>
+      `;
+      btn.addEventListener('click', () => {
+        applyStage(parseInt(num));
+        buildSetupRecordList();
+        showSetupStep(3);
+      });
+      list.appendChild(btn);
+    });
+  }
+  
+  // Step 3: build recording list for selected stage
+  function buildSetupRecordList() {
+    const list = document.getElementById('setup-record-list');
+    list.innerHTML = '';
+    
+    const stage = stages[currentStage];
+    if (!stage) return;
+    
+    // ── Build praise row first (always, regardless of stage) ──
+    const praiseContainer = document.getElementById('setup-praise-row');
+    if (praiseContainer) {
+      praiseContainer.innerHTML = '';
+      praiseContainer.appendChild(buildRecordRow(PRAISE_KEY, 'すごいね！'));
+    }
+    
+    // ── Build greeting row (optional opening greeting) ──
+    const greetingContainer = document.getElementById('setup-greeting-row');
+    if (greetingContainer) {
+      greetingContainer.innerHTML = '';
+      greetingContainer.appendChild(buildRecordRow(GREETING_KEY, 'まねしてこえをだそう！'));
+    }
+    
+    let wordsToRecord = [];
+    if (stage.repeatType === 'lengthen') {
+      const base = stage.words[0];
+      wordsToRecord = [base, base + 'ー', base + 'ーー', base + 'ーーー'];
+    } else if (stage.repeatType === 'multiply') {
+      stage.words.forEach(w => {
+        const base = w.replace(/ー+$/, '');
+        wordsToRecord.push(base, base + base, base + base + base, base + base + base + base);
+      });
+    } else if (stage.repeatType === 'pause') {
+      // 2-word phrases: split each phrase into its 2 words, deduplicated
+      const seen = new Set();
+      stage.words.forEach(phrase => {
+        phrase.split('|').map(p => p.trim()).filter(p => p).forEach(w => {
+          if (!seen.has(w)) {
+            seen.add(w);
+            wordsToRecord.push(w);
+          }
+        });
+      });
+    } else {
+      wordsToRecord = [...stage.words];
+    }
+    
+    wordsToRecord.forEach(word => {
+      list.appendChild(buildRecordRow(word, word));
+    });
+  }
+  
+  // Build a single record row for either a vocabulary word or the praise key
+  function buildRecordRow(storageKey, displayText) {
+    const row = document.createElement('div');
+    row.className = 'record-row';
+    
+    const wordEl = document.createElement('div');
+    wordEl.className = 'word';
+    wordEl.textContent = displayText;
+    
+    const status = document.createElement('div');
+    status.className = 'status';
+    
+    const recBtn = document.createElement('button');
+    recBtn.className = 'rec-btn';
+    
+    const playBtn = document.createElement('button');
+    playBtn.className = 'play-btn';
+    playBtn.textContent = '▶';
+    
+    const delBtn = document.createElement('button');
+    delBtn.className = 'del-btn';
+    delBtn.textContent = '🗑';
+    
+    function refreshButtons() {
+      const existing = getRecordingForWord(storageKey);
+      if (existing) {
+        status.textContent = '✓';
+        status.className = 'status done';
+        recBtn.textContent = '🔁 録り直し';
+        playBtn.style.display = '';
+        delBtn.style.display = '';
+      } else {
+        status.textContent = '未録音';
+        status.className = 'status pending';
+        recBtn.textContent = '🎙 録音';
+        playBtn.style.display = 'none';
+        delBtn.style.display = 'none';
+      }
+    }
+    
+    recBtn.addEventListener('click', () => {
+      if (mediaRecorder && mediaRecorder.state === 'recording' && recordingForWord === storageKey) {
+        stopRecording();
+        recBtn.classList.remove('recording');
+        recBtn.textContent = '🎙 録音';
+        setTimeout(refreshButtons, 300);
+      } else {
+        recBtn.textContent = '⏹ 止める';
+        recBtn.classList.add('recording');
+        startRecording(storageKey, recBtn).catch(() => {
+          recBtn.classList.remove('recording');
+          refreshButtons();
+        });
+        setTimeout(() => {
+          if (!mediaRecorder || mediaRecorder.state !== 'recording') {
+            recBtn.classList.remove('recording');
+            refreshButtons();
+          }
+        }, 100);
+      }
+    });
+    
+    playBtn.addEventListener('click', () => {
+      const audio = getRecordingForWord(storageKey);
+      if (audio) playRecordedAudio(audio);
+    });
+    
+    delBtn.addEventListener('click', () => {
+      if (confirm('「' + displayText + '」の録音を削除しますか？')) {
+        deleteRecordingForWord(storageKey);
+        refreshButtons();
+      }
+    });
+    
+    row.appendChild(wordEl);
+    row.appendChild(status);
+    row.appendChild(recBtn);
+    row.appendChild(playBtn);
+    row.appendChild(delBtn);
+    
+    refreshButtons();
+    return row;
+  }
+  
+  // Back button: step 3 → step 2
+  document.getElementById('back-to-stage').addEventListener('click', () => {
+    // Stop any in-progress recording
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      stopRecording();
+    }
+    showSetupStep(2);
+  });
+  
+  // Step 3 → Start playing
+  document.getElementById('start-playing').addEventListener('click', actuallyStart);
+  
+  // ── Audio ──
+  async function actuallyStart() {
+    // Stop any in-progress recording
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      stopRecording();
+      // Wait for save
+      await new Promise(r => setTimeout(r, 400));
+    }
+    
+    // Warn if praise is not recorded (it's the most important reward)
+    if (!getRecordingForWord(PRAISE_KEY)) {
+      const proceed = confirm('「すごいね！」のほめ言葉がまだ録音されていません。\n録音すると、お子さんが声を出した時に親の声でほめることができます。\n\n録音せずにスタートしますか？');
+      if (!proceed) return;
+    }
+    
+    try {
+      // Reuse the global mic stream acquired at app start
+      if (!micStream) {
+        // Fallback: acquire if missing (shouldn't happen in normal flow)
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+        });
+      }
+      if (dbgPerm) dbgPerm.textContent = '許可';
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
+      mic = audioCtx.createMediaStreamSource(micStream);
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 4096;
+      analyser.smoothingTimeConstant = 0.2;
+      mic.connect(analyser);
+      dataArray = new Float32Array(analyser.fftSize);
+      freqArray = new Float32Array(analyser.frequencyBinCount);
+      
+      welcome.classList.add('hidden');
+      
+      // ── Show opening animation ──
+      // "まねしてこえをだそう！" with bouncing rabbit for 3 seconds
+      const openingOverlay = document.getElementById('opening-overlay');
+      openingOverlay.classList.add('show');
+      
+      // ── Suppress mic detection during opening (melody + greeting) ──
+      rabbitSpeaking = true;
+      
+      // ── Play start melody (cheerful ascending notes) ──
+      playStartMelody();
+      
+      // ── Play parent's greeting recording (if any) shortly after melody ──
+      const greetingAudio = getRecordingForWord(GREETING_KEY);
+      if (greetingAudio) {
+        // Wait until melody is mostly done (about 1.6s) so they don't overlap
+        setTimeout(() => {
+          playRecordedAudio(greetingAudio).catch(() => {});
+        }, 1600);
+      }
+      
+      // After opening, start the actual session
+      setTimeout(() => {
+        // Fade out opening
+        openingOverlay.style.transition = 'opacity 0.5s';
+        openingOverlay.style.opacity = '0';
+        setTimeout(() => {
+          openingOverlay.classList.remove('show');
+          openingOverlay.style.opacity = '';
+          openingOverlay.style.transition = '';
+        }, 500);
+        
+        // Begin session
+        listening = true;
+        sessionStartTime = audioCtx.currentTime;
+        lastVocalTime = sessionStartTime;
+        // Re-enable mic detection now that opening is done
+        rabbitSpeaking = false;
+        if (rabbitSpeakingFailsafe) {
+          clearTimeout(rabbitSpeakingFailsafe);
+          rabbitSpeakingFailsafe = null;
+        }
+        if (dbgState) dbgState.textContent = '環境音を測定中...（2秒）';
+        blinkRabbit();
+        startCalibration();
+        setTimeout(() => {
+          if (dbgState) dbgState.textContent = '聴取中';
+          // Show first modeling demo immediately so child sees what to do
+          showModeling();
+          // Then schedule next at normal interval
+        }, 2000);
+        tick();
+        
+        // Start timeline collection (one tick per 30s)
+        setInterval(() => {
+          if (!listening) return;
+          timelineData.push(0);
+        }, 30000);
+      }, 3500);
+    } catch (e) {
+      if (dbgPerm) dbgPerm.textContent = '拒否: ' + e.name;
+      if (dbgState) dbgState.textContent = '失敗';
+      alert('マイクへのアクセスが必要です。ブラウザの設定を確認してください。');
+    }
+  }
+  
+  function rms(buf) {
+    let s = 0;
+    for (let i = 0; i < buf.length; i++) s += buf[i] * buf[i];
+    return Math.sqrt(s / buf.length);
+  }
+  
+  function detectPitch(buf, sampleRate) {
+    const SIZE = Math.min(buf.length, 2048);
+    const minPeriod = Math.floor(sampleRate / 600);
+    const maxPeriod = Math.floor(sampleRate / 80);
+    let bestOff = -1, bestCorr = 0;
+    let energy = 0;
+    for (let i = 0; i < SIZE; i++) energy += buf[i] * buf[i];
+    if (energy < 0.0001) return { freq: 0, confidence: 0 };
+    
+    for (let off = minPeriod; off < maxPeriod && off < SIZE / 2; off++) {
+      let corr = 0, normA = 0, normB = 0;
+      for (let i = 0; i < SIZE - off; i++) {
+        corr += buf[i] * buf[i + off];
+        normA += buf[i] * buf[i];
+        normB += buf[i + off] * buf[i + off];
+      }
+      const norm = Math.sqrt(normA * normB);
+      if (norm > 0) {
+        const c = corr / norm;
+        if (c > bestCorr) { bestCorr = c; bestOff = off; }
+      }
+    }
+    if (bestOff > 0 && bestCorr > 0.3) {
+      return { freq: sampleRate / bestOff, confidence: bestCorr };
+    }
+    return { freq: 0, confidence: bestCorr };
+  }
+  
+  function computeHNR(freqData, sampleRate, fftSize) {
+    const binSize = sampleRate / fftSize;
+    const minBin = Math.floor(80 / binSize);
+    const maxBin = Math.floor(4000 / binSize);
+    let peaks = [];
+    for (let i = minBin + 2; i < maxBin - 2; i++) {
+      const v = freqData[i];
+      if (v > freqData[i-1] && v > freqData[i+1] &&
+          v > freqData[i-2] && v > freqData[i+2]) {
+        peaks.push(Math.pow(10, v / 20));
+      }
+    }
+    let total = 0, count = 0;
+    for (let i = minBin; i < maxBin; i++) {
+      total += Math.pow(10, freqData[i] / 20);
+      count++;
+    }
+    const meanLevel = total / count;
+    if (peaks.length === 0 || meanLevel === 0) return 0;
+    const peakAvg = peaks.reduce((a,b)=>a+b, 0) / peaks.length;
+    const ratio = peakAvg / meanLevel;
+    return Math.min(1, Math.max(0, (ratio - 1) / 10));
+  }
+  
+  // ============================================================
+  // ── Word SVG Dictionary ──
+  // Hand-drawn SVG images for vocabulary words (Stages 6-11)
+  // Designed for ASD children: simple, high contrast, bright colors
+  // ============================================================
+  const wordImages = {
+    // ── Stage 6: First words ──
+    'まんま': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <!-- Steam rising from rice -->
+      <path d="M 70 50 Q 65 35 75 25 Q 85 35 80 50" stroke="#B8E0F5" stroke-width="3" fill="none" opacity="0.7"/>
+      <path d="M 100 45 Q 95 25 105 15 Q 115 25 110 45" stroke="#B8E0F5" stroke-width="3" fill="none" opacity="0.7"/>
+      <path d="M 130 50 Q 125 35 135 25 Q 145 35 140 50" stroke="#B8E0F5" stroke-width="3" fill="none" opacity="0.7"/>
+      <!-- Bowl shadow -->
+      <ellipse cx="100" cy="170" rx="75" ry="8" fill="#0B2E4F" opacity="0.15"/>
+      <!-- Bowl (dark blue with rim) -->
+      <path d="M 35 100 Q 35 165 100 165 Q 165 165 165 100 Z" fill="#3A6FA3" stroke="#0B2E4F" stroke-width="3"/>
+      <!-- Bowl rim highlight -->
+      <ellipse cx="100" cy="100" rx="65" ry="10" fill="#5A8FB8" stroke="#0B2E4F" stroke-width="3"/>
+      <!-- White rice mound -->
+      <path d="M 45 95 Q 50 60 100 55 Q 150 60 155 95 Q 145 105 100 105 Q 55 105 45 95 Z" fill="#FFFFFF" stroke="#D8D8D8" stroke-width="2"/>
+      <!-- Rice grain texture (small ovals to suggest grains) -->
+      <ellipse cx="70" cy="80" rx="3" ry="2" fill="#E8E8E8"/>
+      <ellipse cx="85" cy="72" rx="3" ry="2" fill="#E8E8E8" transform="rotate(20 85 72)"/>
+      <ellipse cx="100" cy="68" rx="3" ry="2" fill="#E8E8E8"/>
+      <ellipse cx="115" cy="72" rx="3" ry="2" fill="#E8E8E8" transform="rotate(-20 115 72)"/>
+      <ellipse cx="130" cy="80" rx="3" ry="2" fill="#E8E8E8"/>
+      <ellipse cx="78" cy="92" rx="3" ry="2" fill="#E8E8E8" transform="rotate(15 78 92)"/>
+      <ellipse cx="95" cy="88" rx="3" ry="2" fill="#E8E8E8"/>
+      <ellipse cx="110" cy="90" rx="3" ry="2" fill="#E8E8E8" transform="rotate(-10 110 90)"/>
+      <ellipse cx="125" cy="92" rx="3" ry="2" fill="#E8E8E8" transform="rotate(20 125 92)"/>
+      <ellipse cx="105" cy="78" rx="3" ry="2" fill="#E8E8E8" transform="rotate(30 105 78)"/>
+    </svg>`,
+    'わんわん': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="100" cy="115" rx="55" ry="55" fill="#D2A66E" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 55 80 L 35 50 L 65 70 Z" fill="#A67841" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 145 80 L 165 50 L 135 70 Z" fill="#A67841" stroke="#0B2E4F" stroke-width="3"/>
+      <circle cx="80" cy="105" r="5" fill="#0B2E4F"/>
+      <circle cx="120" cy="105" r="5" fill="#0B2E4F"/>
+      <ellipse cx="100" cy="130" rx="14" ry="10" fill="#0B2E4F"/>
+      <path d="M 92 145 Q 100 152 108 145" stroke="#0B2E4F" stroke-width="3" fill="none"/>
+    </svg>`,
+    'ぶーぶー': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <rect x="30" y="80" width="140" height="50" rx="10" fill="#E94F37" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 50 80 L 65 50 L 135 50 L 150 80 Z" fill="#E94F37" stroke="#0B2E4F" stroke-width="3"/>
+      <rect x="70" y="55" width="25" height="22" fill="#B8E0F5" stroke="#0B2E4F" stroke-width="2"/>
+      <rect x="105" y="55" width="25" height="22" fill="#B8E0F5" stroke="#0B2E4F" stroke-width="2"/>
+      <circle cx="60" cy="135" r="18" fill="#0B2E4F"/>
+      <circle cx="60" cy="135" r="8" fill="#888"/>
+      <circle cx="140" cy="135" r="18" fill="#0B2E4F"/>
+      <circle cx="140" cy="135" r="8" fill="#888"/>
+    </svg>`,
+    
+    // ── Stage 7 & 8: Common nouns ──
+    'バナナ': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 50 70 Q 35 130 100 160 Q 165 130 150 70 Q 130 95 100 100 Q 70 95 50 70 Z" fill="#FFE066" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 90 65 L 95 50 L 110 50 L 105 65 Z" fill="#8B7000" stroke="#0B2E4F" stroke-width="2"/>
+      <path d="M 60 90 Q 100 105 140 90" stroke="#D4B843" stroke-width="2" fill="none"/>
+    </svg>`,
+    'ねこ': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="100" cy="115" r="55" fill="#FFE066" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 55 75 L 45 35 L 80 65 Z" fill="#FFE066" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 145 75 L 155 35 L 120 65 Z" fill="#FFE066" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 60 70 L 55 50 L 75 65 Z" fill="#FFB8C7"/>
+      <path d="M 140 70 L 145 50 L 125 65 Z" fill="#FFB8C7"/>
+      <circle cx="80" cy="110" r="6" fill="#0B2E4F"/>
+      <circle cx="120" cy="110" r="6" fill="#0B2E4F"/>
+      <path d="M 95 130 L 100 138 L 105 130 Z" fill="#FFB8C7" stroke="#0B2E4F" stroke-width="2"/>
+      <line x1="60" y1="135" x2="85" y2="135" stroke="#0B2E4F" stroke-width="2"/>
+      <line x1="60" y1="142" x2="85" y2="140" stroke="#0B2E4F" stroke-width="2"/>
+      <line x1="115" y1="135" x2="140" y2="135" stroke="#0B2E4F" stroke-width="2"/>
+      <line x1="115" y1="140" x2="140" y2="142" stroke="#0B2E4F" stroke-width="2"/>
+    </svg>`,
+    'りんご': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="100" cy="115" rx="55" ry="60" fill="#E94F37" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 100 60 Q 95 45 100 35 Q 110 40 105 55" stroke="#5C8A3A" stroke-width="3" fill="#7FB04F"/>
+      <path d="M 105 50 Q 130 40 145 50 Q 130 55 110 60" fill="#5C8A3A" stroke="#0B2E4F" stroke-width="2"/>
+      <ellipse cx="80" cy="95" rx="12" ry="20" fill="#FFF" opacity="0.4"/>
+    </svg>`,
+    'ママ': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 70 35 Q 50 50 50 80 L 50 110 Q 60 105 70 105 L 130 105 Q 140 105 150 110 L 150 80 Q 150 50 130 35 Z" fill="#8B4513" stroke="#0B2E4F" stroke-width="3"/>
+      <circle cx="100" cy="95" r="40" fill="#FFD9B3" stroke="#0B2E4F" stroke-width="3"/>
+      <circle cx="85" cy="95" r="4" fill="#0B2E4F"/>
+      <circle cx="115" cy="95" r="4" fill="#0B2E4F"/>
+      <path d="M 88 110 Q 100 120 112 110" stroke="#E94F37" stroke-width="3" fill="none"/>
+      <circle cx="78" cy="105" r="5" fill="#FFB8C7" opacity="0.7"/>
+      <circle cx="122" cy="105" r="5" fill="#FFB8C7" opacity="0.7"/>
+      <path d="M 60 130 Q 60 160 70 175 L 130 175 Q 140 160 140 130 Z" fill="#E94F37" stroke="#0B2E4F" stroke-width="3"/>
+    </svg>`,
+    'パパ': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 65 40 Q 50 55 55 85 L 145 85 Q 150 55 135 40 Z" fill="#3A2818" stroke="#0B2E4F" stroke-width="3"/>
+      <circle cx="100" cy="95" r="40" fill="#FFD9B3" stroke="#0B2E4F" stroke-width="3"/>
+      <circle cx="85" cy="92" r="4" fill="#0B2E4F"/>
+      <circle cx="115" cy="92" r="4" fill="#0B2E4F"/>
+      <path d="M 88 115 Q 100 122 112 115" stroke="#0B2E4F" stroke-width="3" fill="none"/>
+      <path d="M 75 120 Q 80 130 85 125 M 115 125 Q 120 130 125 120" stroke="#3A2818" stroke-width="3" fill="none"/>
+      <path d="M 60 135 L 60 175 L 140 175 L 140 135 Z" fill="#3A6FA3" stroke="#0B2E4F" stroke-width="3"/>
+      <line x1="100" y1="135" x2="100" y2="175" stroke="#0B2E4F" stroke-width="2"/>
+    </svg>`,
+    'いぬ': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="100" cy="115" rx="55" ry="55" fill="#D2A66E" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 50 100 Q 30 95 35 130 Q 50 130 60 115 Z" fill="#A67841" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 150 100 Q 170 95 165 130 Q 150 130 140 115 Z" fill="#A67841" stroke="#0B2E4F" stroke-width="3"/>
+      <circle cx="80" cy="105" r="5" fill="#0B2E4F"/>
+      <circle cx="120" cy="105" r="5" fill="#0B2E4F"/>
+      <ellipse cx="100" cy="130" rx="12" ry="9" fill="#0B2E4F"/>
+      <path d="M 92 145 Q 100 152 108 145 Q 100 158 92 145" stroke="#0B2E4F" stroke-width="3" fill="#FFB8C7"/>
+    </svg>`,
+    'くるま': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="90" width="160" height="55" rx="12" fill="#3A6FA3" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 45 90 L 60 55 L 140 55 L 155 90 Z" fill="#3A6FA3" stroke="#0B2E4F" stroke-width="3"/>
+      <rect x="70" y="60" width="22" height="25" fill="#B8E0F5" stroke="#0B2E4F" stroke-width="2"/>
+      <rect x="108" y="60" width="22" height="25" fill="#B8E0F5" stroke="#0B2E4F" stroke-width="2"/>
+      <circle cx="55" cy="155" r="20" fill="#0B2E4F"/>
+      <circle cx="55" cy="155" r="9" fill="#888"/>
+      <circle cx="145" cy="155" r="20" fill="#0B2E4F"/>
+      <circle cx="145" cy="155" r="9" fill="#888"/>
+      <circle cx="35" cy="105" r="5" fill="#FFE066"/>
+      <circle cx="165" cy="105" r="5" fill="#FFE066"/>
+    </svg>`,
+    'ボール': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="100" cy="100" r="65" fill="#E94F37" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 35 100 Q 100 60 165 100" stroke="#FFFFFF" stroke-width="4" fill="none"/>
+      <path d="M 35 100 Q 100 140 165 100" stroke="#FFFFFF" stroke-width="4" fill="none"/>
+      <path d="M 100 35 Q 80 100 100 165" stroke="#FFFFFF" stroke-width="4" fill="none"/>
+      <ellipse cx="80" cy="80" rx="15" ry="20" fill="#FFF" opacity="0.4"/>
+    </svg>`,
+    'おはな': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <line x1="100" y1="100" x2="100" y2="180" stroke="#5C8A3A" stroke-width="6"/>
+      <ellipse cx="80" cy="140" rx="20" ry="10" fill="#7FB04F" transform="rotate(-30 80 140)"/>
+      <ellipse cx="120" cy="155" rx="20" ry="10" fill="#7FB04F" transform="rotate(30 120 155)"/>
+      <circle cx="100" cy="100" r="20" fill="#FFE066"/>
+      <ellipse cx="100" cy="65" rx="22" ry="30" fill="#FFB8C7" stroke="#0B2E4F" stroke-width="2"/>
+      <ellipse cx="135" cy="100" rx="30" ry="22" fill="#FFB8C7" stroke="#0B2E4F" stroke-width="2"/>
+      <ellipse cx="100" cy="135" rx="22" ry="30" fill="#FFB8C7" stroke="#0B2E4F" stroke-width="2"/>
+      <ellipse cx="65" cy="100" rx="30" ry="22" fill="#FFB8C7" stroke="#0B2E4F" stroke-width="2"/>
+      <circle cx="100" cy="100" r="15" fill="#FFE066" stroke="#0B2E4F" stroke-width="2"/>
+    </svg>`,
+    'おみず': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 60 50 L 60 160 Q 60 175 75 175 L 125 175 Q 140 175 140 160 L 140 50 Z" fill="#B8E0F5" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 60 90 Q 100 100 140 90 L 140 160 Q 140 175 125 175 L 75 175 Q 60 175 60 160 Z" fill="#3A9FE0" opacity="0.7"/>
+      <path d="M 60 90 Q 80 85 100 90 Q 120 95 140 90" stroke="#0B2E4F" stroke-width="2" fill="none"/>
+      <ellipse cx="80" cy="120" rx="6" ry="9" fill="#FFFFFF" opacity="0.7"/>
+      <ellipse cx="115" cy="140" rx="5" ry="7" fill="#FFFFFF" opacity="0.6"/>
+      <rect x="55" y="45" width="90" height="10" rx="4" fill="#888" stroke="#0B2E4F" stroke-width="2"/>
+    </svg>`,
+    
+    // ── Stage 9: Action verbs ──
+    'きた': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="100" cy="60" r="22" fill="#FFD9B3" stroke="#0B2E4F" stroke-width="3"/>
+      <circle cx="92" cy="58" r="3" fill="#0B2E4F"/>
+      <circle cx="108" cy="58" r="3" fill="#0B2E4F"/>
+      <path d="M 92 68 Q 100 73 108 68" stroke="#E94F37" stroke-width="2" fill="none"/>
+      <path d="M 90 85 L 90 130 L 80 165 M 110 85 L 110 130 L 120 165" stroke="#3A6FA3" stroke-width="14" fill="none" stroke-linecap="round"/>
+      <path d="M 80 90 L 60 110 M 120 90 L 140 110" stroke="#FFD9B3" stroke-width="10" fill="none" stroke-linecap="round"/>
+      <path d="M 35 100 L 60 100 M 35 100 L 50 90 M 35 100 L 50 110" stroke="#E94F37" stroke-width="4" fill="none" stroke-linecap="round"/>
+    </svg>`,
+    'いる': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <rect x="30" y="140" width="140" height="40" fill="#7FB04F" stroke="#0B2E4F" stroke-width="3"/>
+      <circle cx="100" cy="80" r="22" fill="#FFD9B3" stroke="#0B2E4F" stroke-width="3"/>
+      <circle cx="92" cy="78" r="3" fill="#0B2E4F"/>
+      <circle cx="108" cy="78" r="3" fill="#0B2E4F"/>
+      <path d="M 92 88 Q 100 93 108 88" stroke="#E94F37" stroke-width="2" fill="none"/>
+      <path d="M 85 105 L 85 140 M 115 105 L 115 140 M 100 100 L 100 140" stroke="#3A6FA3" stroke-width="12" fill="none" stroke-linecap="round"/>
+    </svg>`,
+    'たべる': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="100" cy="100" r="60" fill="#FFD9B3" stroke="#0B2E4F" stroke-width="3"/>
+      <circle cx="80" cy="85" r="5" fill="#0B2E4F"/>
+      <circle cx="120" cy="85" r="5" fill="#0B2E4F"/>
+      <ellipse cx="100" cy="115" rx="20" ry="15" fill="#E94F37" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 100 110 L 110 100 L 130 90" stroke="#5C8A3A" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="135" cy="85" r="10" fill="#7FB04F" stroke="#0B2E4F" stroke-width="2"/>
+    </svg>`,
+    'のむ': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="80" cy="100" r="40" fill="#FFD9B3" stroke="#0B2E4F" stroke-width="3"/>
+      <circle cx="70" cy="95" r="3" fill="#0B2E4F"/>
+      <circle cx="85" cy="95" r="3" fill="#0B2E4F"/>
+      <ellipse cx="80" cy="115" rx="8" ry="6" fill="#E94F37"/>
+      <path d="M 115 60 L 115 130 Q 115 145 130 145 L 155 145 Q 170 145 170 130 L 170 60 Z" fill="#B8E0F5" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 115 90 L 170 90" stroke="#0B2E4F" stroke-width="2"/>
+      <path d="M 115 90 Q 145 95 170 90" fill="#3A9FE0" opacity="0.7"/>
+      <path d="M 95 100 L 115 110" stroke="#FFD9B3" stroke-width="8" stroke-linecap="round"/>
+    </svg>`,
+    'ねる': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="130" width="160" height="45" rx="6" fill="#8B4513" stroke="#0B2E4F" stroke-width="3"/>
+      <ellipse cx="100" cy="120" rx="65" ry="20" fill="#FFB8C7" stroke="#0B2E4F" stroke-width="3"/>
+      <circle cx="55" cy="115" r="22" fill="#FFD9B3" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 47 113 Q 50 110 53 113" stroke="#0B2E4F" stroke-width="2" fill="none"/>
+      <path d="M 60 113 Q 63 110 66 113" stroke="#0B2E4F" stroke-width="2" fill="none"/>
+      <text x="115" y="80" font-size="32" fill="#3A6FA3" font-weight="700">Z</text>
+      <text x="135" y="65" font-size="24" fill="#3A6FA3" font-weight="700">z</text>
+      <text x="150" y="55" font-size="18" fill="#3A6FA3" font-weight="700">z</text>
+    </svg>`,
+    'いく': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="80" cy="60" r="22" fill="#FFD9B3" stroke="#0B2E4F" stroke-width="3"/>
+      <circle cx="74" cy="58" r="3" fill="#0B2E4F"/>
+      <circle cx="86" cy="58" r="3" fill="#0B2E4F"/>
+      <path d="M 78 70 L 86 70" stroke="#E94F37" stroke-width="2"/>
+      <path d="M 70 85 L 70 130 L 55 165 M 90 85 L 90 130 L 105 165" stroke="#3A6FA3" stroke-width="14" fill="none" stroke-linecap="round"/>
+      <path d="M 60 90 L 50 105 M 100 90 L 110 100" stroke="#FFD9B3" stroke-width="10" fill="none" stroke-linecap="round"/>
+      <path d="M 130 100 L 175 100 M 165 90 L 175 100 L 165 110" stroke="#E94F37" stroke-width="5" fill="none" stroke-linecap="round"/>
+    </svg>`,
+    'みる': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="100" cy="100" rx="75" ry="50" fill="#FFFFFF" stroke="#0B2E4F" stroke-width="3"/>
+      <circle cx="100" cy="100" r="35" fill="#3A6FA3" stroke="#0B2E4F" stroke-width="2"/>
+      <circle cx="100" cy="100" r="18" fill="#0B2E4F"/>
+      <circle cx="92" cy="92" r="6" fill="#FFFFFF"/>
+      <path d="M 30 50 Q 50 30 80 35 M 170 50 Q 150 30 120 35" stroke="#0B2E4F" stroke-width="3" fill="none"/>
+    </svg>`,
+    'おいで': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="100" cy="60" r="22" fill="#FFD9B3" stroke="#0B2E4F" stroke-width="3"/>
+      <circle cx="92" cy="58" r="3" fill="#0B2E4F"/>
+      <circle cx="108" cy="58" r="3" fill="#0B2E4F"/>
+      <path d="M 90 70 Q 100 78 110 70" stroke="#E94F37" stroke-width="2" fill="none"/>
+      <path d="M 90 85 L 90 140 M 110 85 L 110 140" stroke="#E94F37" stroke-width="14" fill="none" stroke-linecap="round"/>
+      <path d="M 90 95 L 50 75 M 110 95 L 150 75" stroke="#FFD9B3" stroke-width="10" fill="none" stroke-linecap="round"/>
+      <circle cx="50" cy="75" r="10" fill="#FFD9B3" stroke="#0B2E4F" stroke-width="2"/>
+      <circle cx="150" cy="75" r="10" fill="#FFD9B3" stroke="#0B2E4F" stroke-width="2"/>
+      <path d="M 145 70 Q 155 65 160 70 Q 158 75 152 73" stroke="#0B2E4F" stroke-width="2" fill="none"/>
+    </svg>`,
+    
+    // ── Stage 10: Attributes/states ──
+    'おおきい': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="100" cy="100" r="80" fill="#FFE066" stroke="#0B2E4F" stroke-width="4"/>
+      <circle cx="80" cy="85" r="8" fill="#0B2E4F"/>
+      <circle cx="120" cy="85" r="8" fill="#0B2E4F"/>
+      <path d="M 75 115 Q 100 135 125 115" stroke="#E94F37" stroke-width="4" fill="none"/>
+      <text x="100" y="195" text-anchor="middle" font-size="14" fill="#0B2E4F" font-weight="700">大</text>
+    </svg>`,
+    'ちいさい': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="100" cy="100" r="25" fill="#FFE066" stroke="#0B2E4F" stroke-width="3"/>
+      <circle cx="93" cy="95" r="3" fill="#0B2E4F"/>
+      <circle cx="107" cy="95" r="3" fill="#0B2E4F"/>
+      <path d="M 92 105 Q 100 112 108 105" stroke="#E94F37" stroke-width="2" fill="none"/>
+      <text x="100" y="160" text-anchor="middle" font-size="14" fill="#0B2E4F" font-weight="700">小</text>
+      <line x1="50" y1="100" x2="70" y2="100" stroke="#888" stroke-width="2" stroke-dasharray="3"/>
+      <line x1="130" y1="100" x2="150" y2="100" stroke="#888" stroke-width="2" stroke-dasharray="3"/>
+    </svg>`,
+    'あつい': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="100" cy="80" r="50" fill="#FFE066" stroke="#0B2E4F" stroke-width="3"/>
+      <circle cx="100" cy="80" r="40" fill="#FFB347"/>
+      <circle cx="100" cy="80" r="30" fill="#E94F37"/>
+      <line x1="100" y1="20" x2="100" y2="35" stroke="#FFE066" stroke-width="4" stroke-linecap="round"/>
+      <line x1="100" y1="125" x2="100" y2="140" stroke="#FFE066" stroke-width="4" stroke-linecap="round"/>
+      <line x1="40" y1="80" x2="55" y2="80" stroke="#FFE066" stroke-width="4" stroke-linecap="round"/>
+      <line x1="145" y1="80" x2="160" y2="80" stroke="#FFE066" stroke-width="4" stroke-linecap="round"/>
+      <line x1="55" y1="35" x2="65" y2="45" stroke="#FFE066" stroke-width="4" stroke-linecap="round"/>
+      <line x1="135" y1="45" x2="145" y2="35" stroke="#FFE066" stroke-width="4" stroke-linecap="round"/>
+      <line x1="55" y1="125" x2="65" y2="115" stroke="#FFE066" stroke-width="4" stroke-linecap="round"/>
+      <line x1="135" y1="115" x2="145" y2="125" stroke="#FFE066" stroke-width="4" stroke-linecap="round"/>
+      <path d="M 70 170 Q 80 155 75 145 Q 90 155 85 170 Z" fill="#E94F37"/>
+      <path d="M 110 170 Q 120 150 115 140 Q 130 150 125 170 Z" fill="#E94F37"/>
+    </svg>`,
+    'つめたい': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 100 30 L 100 170" stroke="#3A9FE0" stroke-width="6" stroke-linecap="round"/>
+      <path d="M 30 100 L 170 100" stroke="#3A9FE0" stroke-width="6" stroke-linecap="round"/>
+      <path d="M 50 50 L 150 150" stroke="#3A9FE0" stroke-width="6" stroke-linecap="round"/>
+      <path d="M 150 50 L 50 150" stroke="#3A9FE0" stroke-width="6" stroke-linecap="round"/>
+      <path d="M 90 30 L 100 40 L 110 30 M 90 170 L 100 160 L 110 170" stroke="#3A9FE0" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M 30 90 L 40 100 L 30 110 M 170 90 L 160 100 L 170 110" stroke="#3A9FE0" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <circle cx="100" cy="100" r="18" fill="#B8E0F5" stroke="#3A9FE0" stroke-width="3"/>
+    </svg>`,
+    'おいしい': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="100" cy="100" r="60" fill="#FFD9B3" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 75 85 Q 80 75 88 85" stroke="#0B2E4F" stroke-width="3" fill="none"/>
+      <path d="M 112 85 Q 120 75 125 85" stroke="#0B2E4F" stroke-width="3" fill="none"/>
+      <path d="M 70 115 Q 100 145 130 115" stroke="#E94F37" stroke-width="4" fill="#E94F37"/>
+      <ellipse cx="100" cy="135" rx="15" ry="8" fill="#FFB8C7"/>
+      <text x="155" y="55" font-size="32">⭐</text>
+      <text x="40" y="70" font-size="28">✨</text>
+    </svg>`,
+    'いたい': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="100" cy="100" r="60" fill="#FFD9B3" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 75 90 L 88 85 M 75 85 L 88 90" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 112 85 L 125 90 M 112 90 L 125 85" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 80 130 Q 100 120 120 130" stroke="#0B2E4F" stroke-width="3" fill="none"/>
+      <path d="M 30 60 L 60 80 M 35 50 L 55 75 M 40 40 L 50 70" stroke="#E94F37" stroke-width="3" fill="none"/>
+      <path d="M 170 60 L 140 80 M 165 50 L 145 75 M 160 40 L 150 70" stroke="#E94F37" stroke-width="3" fill="none"/>
+      <text x="100" y="50" text-anchor="middle" font-size="32" fill="#E94F37" font-weight="700">!</text>
+    </svg>`,
+    
+    // ── Stage 11 only: extra words ──
+    'ころころ': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="60" cy="120" r="30" fill="#E94F37" stroke="#0B2E4F" stroke-width="3" opacity="0.4"/>
+      <circle cx="100" cy="110" r="35" fill="#E94F37" stroke="#0B2E4F" stroke-width="3" opacity="0.6"/>
+      <circle cx="140" cy="100" r="40" fill="#E94F37" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 110 70 Q 145 60 175 80" stroke="#0B2E4F" stroke-width="2" fill="none" stroke-dasharray="4"/>
+      <path d="M 30 145 L 175 145" stroke="#5C8A3A" stroke-width="3"/>
+    </svg>`,
+    'だっこ': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="100" cy="50" r="20" fill="#FFD9B3" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 90 50 L 90 60 L 110 60 L 110 50" stroke="#0B2E4F" stroke-width="2"/>
+      <circle cx="92" cy="48" r="2" fill="#0B2E4F"/>
+      <circle cx="108" cy="48" r="2" fill="#0B2E4F"/>
+      <path d="M 85 70 L 75 110 L 50 130 M 115 70 L 125 110 L 150 130" stroke="#E94F37" stroke-width="14" fill="none" stroke-linecap="round"/>
+      <ellipse cx="100" cy="95" rx="35" ry="40" fill="#FFB347" stroke="#0B2E4F" stroke-width="3"/>
+      <circle cx="100" cy="125" r="15" fill="#FFD9B3" stroke="#0B2E4F" stroke-width="2"/>
+      <circle cx="95" cy="123" r="2" fill="#0B2E4F"/>
+      <circle cx="105" cy="123" r="2" fill="#0B2E4F"/>
+    </svg>`,
+    'ぼくの': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="80" cy="60" r="22" fill="#FFD9B3" stroke="#0B2E4F" stroke-width="3"/>
+      <circle cx="74" cy="58" r="3" fill="#0B2E4F"/>
+      <circle cx="86" cy="58" r="3" fill="#0B2E4F"/>
+      <path d="M 75 70 Q 80 75 86 70" stroke="#E94F37" stroke-width="2" fill="none"/>
+      <path d="M 70 85 L 65 130 M 90 85 L 95 130" stroke="#3A6FA3" stroke-width="12" fill="none" stroke-linecap="round"/>
+      <path d="M 90 95 L 130 105" stroke="#FFD9B3" stroke-width="10" fill="none" stroke-linecap="round"/>
+      <circle cx="135" cy="105" r="8" fill="#FFD9B3" stroke="#0B2E4F" stroke-width="2"/>
+      <path d="M 145 105 L 175 105 M 165 95 L 175 105 L 165 115" stroke="#E94F37" stroke-width="3" fill="none"/>
+    </svg>`,
+    'くつ': `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 30 130 Q 30 100 60 100 L 130 100 Q 160 100 170 120 Q 175 140 165 155 L 50 155 Q 30 155 30 130 Z" fill="#E94F37" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 60 100 L 75 70 Q 80 65 90 70 L 95 100" fill="#E94F37" stroke="#0B2E4F" stroke-width="3"/>
+      <path d="M 65 90 L 85 90 M 65 80 L 85 80" stroke="#FFFFFF" stroke-width="2"/>
+      <ellipse cx="100" cy="160" rx="65" ry="6" fill="#0B2E4F"/>
+    </svg>`
+  };
+  
+  // Get image element for a word, or null if no image exists
+  // For words with "|" (2-word phrases), return null (handled separately)
+  function getWordImage(word) {
+    if (!word) return null;
+    // Strip trailing "ー" for matching (e.g., "あー" → "あ")
+    const baseWord = word.replace(/ー+$/, '');
+    return wordImages[word] || wordImages[baseWord] || null;
+  }
+  
+  // Determine if the current stage should show images instead of bubbles
+  function stageUsesImages() {
+    return currentStage >= 6;
+  }
+  
+  // Create an image popup at the given position (substitute for bubble)
+  function createWordImage(word, originX, originY, options) {
+    options = options || {};
+    const svgString = getWordImage(word);
+    if (!svgString) return false;
+    
+    const size = options.size || 180;
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = `
+      position: fixed;
+      left: ${originX - size/2}px;
+      top: ${originY - size/2}px;
+      width: ${size}px;
+      height: ${size}px;
+      pointer-events: none;
+      z-index: 1000;
+      will-change: transform, opacity;
+      filter: drop-shadow(0 6px 16px rgba(0,0,0,0.25));
+    `;
+    wrapper.innerHTML = svgString;
+    const svgEl = wrapper.querySelector('svg');
+    if (svgEl) {
+      svgEl.style.width = '100%';
+      svgEl.style.height = '100%';
+    }
+    document.body.appendChild(wrapper);
+    
+    // Animation: float up like a bubble but bigger and clearer
+    const drift = (Math.random() - 0.5) * 200;
+    const targetY = -size - 50;
+    const duration = options.duration || 4500;
+    
+    try {
+      const anim = wrapper.animate([
+        { transform: 'translate(0, 0) scale(0.3) rotate(0deg)', opacity: 0 },
+        { transform: 'translate(0, -30px) scale(1.0) rotate(0deg)', opacity: 1, offset: 0.15 },
+        { transform: `translate(${drift * 0.3}px, ${-window.innerHeight * 0.4}px) scale(1.0) rotate(${(Math.random()-0.5)*20}deg)`, opacity: 1, offset: 0.7 },
+        { transform: `translate(${drift}px, ${targetY}px) scale(0.7) rotate(${(Math.random()-0.5)*40}deg)`, opacity: 0 }
+      ], {
+        duration: duration,
+        easing: 'cubic-bezier(0.4, 0, 0.6, 1)',
+        fill: 'forwards'
+      });
+      anim.onfinish = () => wrapper.remove();
+    } catch (e) {
+      setTimeout(() => wrapper.remove(), duration);
+    }
+    
+    // Soft pop sound when image appears
+    playPopSound(400);
+    return true;
+  }
+  
+  // ── Bubble creation (called when child vocalizes) ──
+  // Simple bubble fallback for stages without specific word images
+  function createSimpleBubble(volume, pitch, hue, startX, startY) {
+    const sizeMin = 50, sizeMax = 150;
+    const size = Math.min(sizeMax, sizeMin + volume * 2000);
+    const bubble = document.createElement('div');
+    bubble.style.cssText = `
+      position: fixed;
+      left: ${startX - size/2}px;
+      top: ${startY - size/2}px;
+      width: ${size}px;
+      height: ${size}px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95) 0%, hsla(${hue}, 80%, 70%, 0.5) 40%, hsla(${hue}, 80%, 60%, 0.4) 70%);
+      pointer-events: none;
+      z-index: 1000;
+    `;
+    document.body.appendChild(bubble);
+    playPopSound(pitch);
+    const drift = (Math.random() - 0.5) * 300;
+    bubble.animate([
+      { transform: 'translate(0, 0) scale(0.3)', opacity: 0 },
+      { transform: 'translate(0, -20px) scale(1)', opacity: 1, offset: 0.15 },
+      { transform: `translate(${drift}px, -${window.innerHeight}px) scale(1)`, opacity: 0 }
+    ], { duration: 4000, easing: 'linear', fill: 'forwards' }).onfinish = () => bubble.remove();
+    bubbleCount++;
+    bubbleCountEl.textContent = bubbleCount;
+  }
+  
+  // Track the most recently demonstrated word (for image display when child vocalizes)
+  let lastDemoWord = null;
+  
+  function createBubble(volume, pitch, duration) {
+    console.log('🎈 createBubble called', { volume, pitch, duration });
+    
+    // ── Trigger enhanced celebration for child's vocalization ──
+    celebrateVocalization(rabbit, pitch);
+    
+    // Get rabbit position
+    const rabbitRect = rabbit.getBoundingClientRect();
+    const startX = rabbitRect.left + rabbitRect.width / 2;
+    const startY = rabbitRect.top + rabbitRect.height * 0.4;
+    
+    // ── Stages 6+: Show word image instead of bubble ──
+    if (stageUsesImages()) {
+      // Use the most recently demonstrated word (rotates through stage's word list)
+      // If 2-word phrase, show both images sequentially
+      const word = lastDemoWord;
+      if (word && word.includes('|')) {
+        const parts = word.split('|').map(p => p.trim()).filter(p => p);
+        if (parts.length === 2) {
+          createWordImage(parts[0], startX - 60, startY, { size: 160 });
+          setTimeout(() => {
+            createWordImage(parts[1], startX + 60, startY, { size: 160 });
+          }, 500);
+        } else {
+          createWordImage(word, startX, startY, { size: 200 });
+        }
+      } else if (word) {
+        // Strip "ー" extensions for image lookup
+        createWordImage(word.replace(/ー+$/, ''), startX, startY, { size: 200 });
+      } else {
+        // No word context yet — fall back to bubble
+        const fallbackHue = 200 + (pitch > 0 ? ((pitch - 80) / 520) * 160 : 0);
+        createSimpleBubble(volume, pitch, fallbackHue, startX, startY);
+      }
+      return;
+    }
+    
+    // ── Stages 1-5: Show bubble ──
+    const sizeMin = 50, sizeMax = 150;
+    const size = Math.min(sizeMax, sizeMin + volume * 2000);
+    
+    // Hue: pitch maps to color
+    let hue = 200;
+    if (pitch > 0) {
+      hue = 200 + ((pitch - 80) / 520) * 160;
+    }
+    
+    console.log('Rabbit position:', startX, startY, 'size:', size);
+    
+    // Create bubble with INLINE styles (no CSS class dependency)
+    const bubble = document.createElement('div');
+    bubble.style.cssText = `
+      position: fixed;
+      left: ${startX - size/2}px;
+      top: ${startY - size/2}px;
+      width: ${size}px;
+      height: ${size}px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, 
+        rgba(255,255,255,0.95) 0%,
+        hsla(${hue}, 80%, 70%, 0.5) 40%,
+        hsla(${hue}, 80%, 60%, 0.4) 70%);
+      box-shadow: 
+        inset 0 0 20px rgba(255,255,255,0.4),
+        0 0 20px hsla(${hue}, 80%, 60%, 0.4);
+      pointer-events: none;
+      z-index: 1000;
+      will-change: transform;
+    `;
+    
+    // Highlight on bubble
+    const highlight = document.createElement('div');
+    highlight.style.cssText = `
+      position: absolute;
+      top: 15%;
+      left: 20%;
+      width: 30%;
+      height: 30%;
+      background: rgba(255,255,255,0.7);
+      border-radius: 50%;
+      filter: blur(2px);
+    `;
+    bubble.appendChild(highlight);
+    
+    document.body.appendChild(bubble);
+    
+    // Play pop sound IMMEDIATELY when bubble appears
+    playPopSound(pitch);
+    
+    // Animation
+    const drift = (Math.random() - 0.5) * 300;
+    const speed = Math.max(2, 5 - duration);
+    
+    try {
+      const anim = bubble.animate([
+        { transform: 'translate(0, 0) scale(0.3)', opacity: 0 },
+        { transform: 'translate(0, -20px) scale(1)', opacity: 1, offset: 0.15 },
+        { transform: `translate(${drift}px, -${window.innerHeight}px) scale(1)`, opacity: 1, offset: 0.9 },
+        { transform: `translate(${drift}px, -${window.innerHeight}px) scale(1.3)`, opacity: 0 }
+      ], {
+        duration: speed * 1000,
+        easing: 'linear',
+        fill: 'forwards'
+      });
+      
+      anim.onfinish = () => {
+        const rect = bubble.getBoundingClientRect();
+        if (rect.left >= 0) {
+          createSparkle(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        } else {
+          createSparkle(startX + drift, 50);
+        }
+        bubble.remove();
+        // No additional sound on pop
+      };
+    } catch (e) {
+      console.error('Animation failed:', e);
+      setTimeout(() => bubble.remove(), 3000);
+    }
+    
+    bubbleCount++;
+    bubbleCountEl.textContent = bubbleCount;
+  }
+  
+  function createSparkle(x, y) {
+    const symbols = ['✨', '⭐', '💫'];
+    const sym = symbols[Math.floor(Math.random() * symbols.length)];
+    const sparkle = document.createElement('div');
+    sparkle.className = 'sparkle';
+    sparkle.textContent = sym;
+    sparkle.style.left = x + 'px';
+    sparkle.style.top = y + 'px';
+    document.body.appendChild(sparkle);
+    sparkle.animate([
+      { opacity: 0, transform: 'scale(0.3) rotate(0deg)' },
+      { opacity: 1, transform: 'scale(1.5) rotate(180deg)', offset: 0.4 },
+      { opacity: 0, transform: 'scale(0.5) rotate(360deg)' }
+    ], { duration: 800, easing: 'ease-out' }).onfinish = () => sparkle.remove();
+  }
+  
+  function playPopSound(pitch) {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    // Map pitch to a softer pop frequency
+    const popFreq = Math.max(400, Math.min(1200, pitch ? pitch * 2 : 800));
+    osc.frequency.setValueAtTime(popFreq, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(popFreq * 0.5, audioCtx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.15);
+  }
+  
+  // ── Enhanced reward: cheerful chime sound (3 ascending notes) ──
+  // ── Cheerful start melody played during the opening animation ──
+  // 8-note ascending arpeggio + held final note, ~1.5 seconds total
+  function playStartMelody() {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    // Major scale ascent: C5, D5, E5, G5, C6, E6 — bright, joyful, child-friendly
+    // Rhythm: quick eighth notes leading to a held final note (like "ta-da!")
+    const notes = [
+      { freq: 523, time: 0.00, dur: 0.16 },  // C5
+      { freq: 587, time: 0.16, dur: 0.16 },  // D5
+      { freq: 659, time: 0.32, dur: 0.16 },  // E5
+      { freq: 784, time: 0.48, dur: 0.16 },  // G5
+      { freq: 1047, time: 0.66, dur: 0.20 }, // C6 (octave jump)
+      { freq: 1319, time: 0.92, dur: 0.50 }, // E6 (held final note)
+    ];
+    notes.forEach(n => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      // Triangle wave — softer than square, brighter than sine
+      osc.type = 'triangle';
+      osc.frequency.value = n.freq;
+      gain.gain.setValueAtTime(0, now + n.time);
+      gain.gain.linearRampToValueAtTime(0.20, now + n.time + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + n.time + n.dur);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now + n.time);
+      osc.stop(now + n.time + n.dur);
+    });
+    // Add a sparkle: a soft high-pitched bell-like layer on the final note
+    const bell = audioCtx.createOscillator();
+    const bellGain = audioCtx.createGain();
+    bell.type = 'sine';
+    bell.frequency.value = 2093; // C7 — sparkle on top
+    bellGain.gain.setValueAtTime(0, now + 0.92);
+    bellGain.gain.linearRampToValueAtTime(0.10, now + 0.94);
+    bellGain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+    bell.connect(bellGain).connect(audioCtx.destination);
+    bell.start(now + 0.92);
+    bell.stop(now + 1.5);
+  }
+  
+  function playRewardChime() {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    // C major arpeggio: C5, E5, G5 (523, 659, 784 Hz)
+    const notes = [
+      { freq: 523, time: 0,    dur: 0.18 },
+      { freq: 659, time: 0.10, dur: 0.18 },
+      { freq: 784, time: 0.20, dur: 0.30 },
+    ];
+    notes.forEach(n => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = n.freq;
+      gain.gain.setValueAtTime(0, now + n.time);
+      gain.gain.linearRampToValueAtTime(0.18, now + n.time + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + n.time + n.dur);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now + n.time);
+      osc.stop(now + n.time + n.dur);
+    });
+  }
+  
+  // ── Enhanced reward: rain of stars from the top of screen ──
+  function rainStars(count) {
+    count = count || 35; // default 35 (was 12)
+    const symbols = ['⭐', '🌟', '✨', '💫', '🎉', '🎊', '💖', '🌈', '🎀', '🍭', '🌸', '🦋'];
+    
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        const star = document.createElement('div');
+        star.style.cssText = `
+          position: fixed;
+          top: -60px;
+          left: ${Math.random() * 100}%;
+          font-size: ${28 + Math.random() * 38}px;
+          z-index: 70;
+          pointer-events: none;
+          will-change: transform;
+          filter: drop-shadow(0 2px 6px rgba(0,0,0,0.15));
+        `;
+        star.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+        document.body.appendChild(star);
+        
+        const fallDuration = 2500 + Math.random() * 1800;
+        const drift = (Math.random() - 0.5) * 300;
+        const rotation = (Math.random() - 0.5) * 1080;
+        const startScale = 0.4 + Math.random() * 0.4;
+        const peakScale = 1.0 + Math.random() * 0.6;
+        
+        star.animate([
+          { transform: `translateY(0) translateX(0) rotate(0deg) scale(${startScale})`, opacity: 0 },
+          { transform: `translateY(80px) translateX(${drift * 0.3}px) rotate(${rotation * 0.3}deg) scale(${peakScale})`, opacity: 1, offset: 0.12 },
+          { transform: `translateY(${window.innerHeight * 0.6}px) translateX(${drift * 0.7}px) rotate(${rotation * 0.7}deg) scale(${peakScale})`, opacity: 1, offset: 0.65 },
+          { transform: `translateY(${window.innerHeight + 80}px) translateX(${drift}px) rotate(${rotation}deg) scale(${peakScale * 0.8})`, opacity: 0 }
+        ], {
+          duration: fallDuration,
+          easing: 'cubic-bezier(0.4, 0.1, 0.7, 0.4)'
+        }).onfinish = () => star.remove();
+      }, i * 35); // 80ms → 35ms (faster cascade for denser look)
+    }
+  }
+  
+  // ── Enhanced reward: dramatic background transformation ──
+  // The whole sky changes to a rainbow gradient briefly
+  let backgroundFlashTimeout = null;
+  function flashBackground() {
+    // Use a fixed overlay div instead of mutating body — cleaner cleanup
+    let overlay = document.getElementById('bg-flash-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'bg-flash-overlay';
+      overlay.style.cssText = `
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.4s ease-out;
+        will-change: opacity;
+      `;
+      document.body.insertBefore(overlay, document.body.firstChild);
+    }
+    
+    // Random rainbow palette — different each time for variety
+    const palettes = [
+      'linear-gradient(180deg, #FFE066 0%, #FFB8C7 35%, #C8B8E8 70%, #87CEEB 100%)', // sunrise
+      'linear-gradient(180deg, #FF6B9D 0%, #FFB347 30%, #FFE066 60%, #95E1D3 100%)', // tropical
+      'linear-gradient(180deg, #C8B8E8 0%, #FFB8C7 35%, #FFE066 70%, #95E1D3 100%)', // pastel rainbow
+      'linear-gradient(180deg, #FFE066 0%, #FF9A8B 30%, #C8B8E8 60%, #87CEEB 100%)', // dawn
+      'linear-gradient(180deg, #FFB347 0%, #FFE066 30%, #95E1D3 60%, #87CEEB 100%)', // sunny
+      'linear-gradient(180deg, #FFB8C7 0%, #FFE066 35%, #C8E6C9 70%, #87CEEB 100%)', // soft
+    ];
+    const palette = palettes[Math.floor(Math.random() * palettes.length)];
+    overlay.style.background = palette;
+    
+    // Trigger fade in
+    requestAnimationFrame(() => {
+      overlay.style.opacity = '1';
+    });
+    
+    // Clear any pending fade-out
+    if (backgroundFlashTimeout) clearTimeout(backgroundFlashTimeout);
+    
+    // Fade out after 2 seconds (linger long enough to be noticed)
+    backgroundFlashTimeout = setTimeout(() => {
+      overlay.style.opacity = '0';
+    }, 2000);
+  }
+  
+  // ── Enhanced reward: brief flash of warm color overlay ──
+  function flashWarmGlow() {
+    const flash = document.createElement('div');
+    flash.style.cssText = `
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center,
+        rgba(255, 224, 102, 0.4) 0%,
+        rgba(255, 184, 199, 0.2) 40%,
+        transparent 80%);
+      pointer-events: none;
+      z-index: 65;
+      will-change: opacity;
+    `;
+    document.body.appendChild(flash);
+    flash.animate([
+      { opacity: 0 },
+      { opacity: 1, offset: 0.2 },
+      { opacity: 0 }
+    ], { duration: 800, easing: 'ease-out' }).onfinish = () => flash.remove();
+  }
+  
+  // ── Enhanced reward: show a big celebration emoji at the rabbit ──
+  function showRewardBurst(targetX, targetY) {
+    const symbols = ['🌟', '⭐', '✨', '💖', '🎉', '🎊', '🌈', '💫', '⚡'];
+    const symCount = 10; // 5 → 10 to fill more of the screen
+    for (let i = 0; i < symCount; i++) {
+      const burst = document.createElement('div');
+      const sym = symbols[Math.floor(Math.random() * symbols.length)];
+      burst.style.cssText = `
+        position: fixed;
+        left: ${targetX}px;
+        top: ${targetY}px;
+        font-size: ${44 + Math.random() * 28}px;
+        z-index: 70;
+        pointer-events: none;
+        will-change: transform;
+      `;
+      burst.textContent = sym;
+      document.body.appendChild(burst);
+      
+      // Distance scales with viewport so it always feels "across the screen"
+      const screenSize = Math.min(window.innerWidth, window.innerHeight);
+      const angle = (i / symCount) * Math.PI * 2 + Math.random() * 0.4;
+      // Distance: 200-350 px (was 80-140)
+      const dist = 200 + Math.random() * (screenSize * 0.25);
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist - 60;
+      const rotation = (Math.random() - 0.5) * 540;
+      
+      burst.animate([
+        { transform: 'translate(0, 0) scale(0.3) rotate(0deg)', opacity: 0 },
+        { transform: `translate(${dx * 0.4}px, ${dy * 0.4}px) scale(1.6) rotate(${rotation * 0.4}deg)`, opacity: 1, offset: 0.25 },
+        { transform: `translate(${dx}px, ${dy}px) scale(1.2) rotate(${rotation}deg)`, opacity: 0 }
+      ], { duration: 1500, easing: 'cubic-bezier(0.2, 0.8, 0.4, 1)' }).onfinish = () => burst.remove();
+    }
+  }
+  
+  // ── Master reward function — multi-modal feedback ──
+  function celebrateVocalization(rabbitElement, pitch) {
+    const rect = rabbitElement.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    
+    // 1. ENVIRONMENT: dramatic full-screen background change (rainbow gradient)
+    flashBackground();
+    
+    // 2. Visual: warm color flash across screen (subtle layer on top of background)
+    flashWarmGlow();
+    
+    // 3. Visual: explosion of stars/hearts radiating far across the screen
+    showRewardBurst(cx, cy);
+    
+    // 4. Visual: stars falling from the top of the screen
+    rainStars(35);
+    
+    // 5. Audio: cheerful 3-note chime
+    playRewardChime();
+    
+    // 5b. Audio: parent's praise voice ("すごいね！") if recorded
+    // Slight delay so it doesn't overlap the chime exactly
+    const praiseAudio = getRecordingForWord(PRAISE_KEY);
+    if (praiseAudio) {
+      setTimeout(() => {
+        playRecordedAudio(praiseAudio).catch(() => {});
+      }, 250);
+    }
+    
+    // 6. Movement: extra big bounce on the main rabbit
+    if (rabbitElement === rabbit) {
+      rabbitElement.classList.remove('bouncing');
+      void rabbitElement.offsetWidth;
+      rabbitElement.classList.add('bouncing-big');
+      setTimeout(() => rabbitElement.classList.remove('bouncing-big'), 800);
+    }
+  }
+  
+  // ── Celebration ──
+  function startCelebration() {
+    celebration.classList.add('active');
+    // Confetti
+    for (let i = 0; i < 30; i++) {
+      setTimeout(() => createConfetti(), i * 50);
+    }
+    setTimeout(() => celebration.classList.remove('active'), 5000);
+  }
+  
+  function createConfetti() {
+    const colors = ['#E94F37', '#FFE066', '#00A19A', '#F2A65A', '#FFB8C7'];
+    const conf = document.createElement('div');
+    conf.className = 'confetti';
+    conf.style.background = colors[Math.floor(Math.random() * colors.length)];
+    conf.style.left = (Math.random() * 100) + '%';
+    conf.style.top = '-20px';
+    conf.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+    document.body.appendChild(conf);
+    
+    conf.animate([
+      { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+      { transform: `translateY(${window.innerHeight + 50}px) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+    ], {
+      duration: 3000 + Math.random() * 2000,
+      easing: 'cubic-bezier(0.5, 0.5, 1, 1)'
+    }).onfinish = () => conf.remove();
+  }
+  
+  // ── Streak handling ──
+  function updateStreak() {
+    streakCount++;
+    streakCountEl.textContent = streakCount;
+    hudStreak.style.display = 'flex';
+    
+    if (streakTimer) clearTimeout(streakTimer);
+    streakTimer = setTimeout(() => {
+      streakCount = 0;
+      hudStreak.style.display = 'none';
+    }, 30000); // streak resets after 30s of silence
+    
+    // Celebration at milestones (variable reinforcement)
+    if (streakCount === 5 || streakCount === 10 || (streakCount > 10 && streakCount % 7 === 0)) {
+      startCelebration();
+    }
+  }
+  
+  // ── Voice detection events ──
+  let vocalFailsafeTimer = null;
+  
+  function onVocalStart() {
+    inVocalization = true;
+    vocalStart = audioCtx.currentTime;
+    recordedSamples = [];
+    vocalFrames = [];
+    rabbitMouthOpen();
+    
+    // Failsafe: if vocalization never ends naturally (e.g. continuous noise),
+    // force-end it after 5 seconds so detection stays responsive.
+    if (vocalFailsafeTimer) clearTimeout(vocalFailsafeTimer);
+    vocalFailsafeTimer = setTimeout(() => {
+      if (inVocalization) {
+        console.warn('[failsafe] vocal detection stuck — forcing end');
+        onVocalEnd();
+      }
+    }, 5000);
+  }
+  
+  function onVocalEnd() {
+    inVocalization = false;
+    if (vocalFailsafeTimer) {
+      clearTimeout(vocalFailsafeTimer);
+      vocalFailsafeTimer = null;
+    }
+    const dur = audioCtx.currentTime - vocalStart;
+    const strict = strictMode.checked;
+    const hnrTh = getHnrThresh();
+    
+    let voiceFrames = 0;
+    let pitchFrames = 0;
+    let hnrFrames = 0;
+    let totalPitch = 0;
+    let totalHnr = 0;
+    let maxVol = 0;
+    for (const f of vocalFrames) {
+      // Count each criterion separately (more lenient)
+      if (f.pitch >= 80 && f.pitch <= 600) pitchFrames++;
+      if (f.hnr > hnrTh) hnrFrames++;
+      if (f.pitch >= 80 && f.pitch <= 600 && f.hnr > hnrTh) {
+        voiceFrames++;
+        totalPitch += f.pitch;
+        totalHnr += f.hnr;
+      }
+      if (f.level > maxVol) maxVol = f.level;
+    }
+    const totalFrames = Math.max(1, vocalFrames.length);
+    const pitchRatio = pitchFrames / totalFrames;
+    const hnrRatio = hnrFrames / totalFrames;
+    
+    // For pitch/HNR averages, use only the frames that passed
+    let avgPitch = 0, avgHnr = 0;
+    if (voiceFrames > 0) {
+      avgPitch = totalPitch / voiceFrames;
+      avgHnr = totalHnr / voiceFrames;
+    } else if (pitchFrames > 0) {
+      // Compute pitch from pitch-only frames as fallback display
+      let p = 0;
+      for (const f of vocalFrames) {
+        if (f.pitch >= 80 && f.pitch <= 600) p += f.pitch;
+      }
+      avgPitch = p / pitchFrames;
+    }
+    
+    // ── New, more lenient decision ──
+    // Voice if duration ≥ 100ms AND (pitch found in ≥20% OR HNR good in ≥20%)
+    let isVoice = false;
+    let rejectReason = '';
+    if (dur < 0.1) {
+      rejectReason = '短すぎ ' + Math.round(dur*1000) + 'ms';
+    } else if (!strict) {
+      // No filter: accept anything ≥100ms
+      isVoice = true;
+    } else if (pitchRatio >= 0.2 || hnrRatio >= 0.2) {
+      // Either criterion met (was: both required) → accept
+      isVoice = true;
+    } else {
+      rejectReason = `声特徴弱 (P:${Math.round(pitchRatio*100)}% H:${Math.round(hnrRatio*100)}%)`;
+    }
+    
+    if (isVoice) {
+      acceptedCount++;
+      stats.totalDur += dur;
+      if (avgPitch > 0) stats.pitches.push(avgPitch);
+      if (timelineData.length === 0) timelineData.push(0);
+      timelineData[timelineData.length - 1]++;
+      lastVocalTime = audioCtx.currentTime;
+      
+      createBubble(maxVol, avgPitch, dur);
+      bounceRabbit();
+      updateStreak();
+      resetModelingTimer();
+      
+      dbgAccept.textContent = acceptedCount;
+      dbgLast.textContent = '✓ HNR=' + avgHnr.toFixed(2) + ' P=' + Math.round(avgPitch);
+    } else {
+      rejectedCount++;
+      dbgReject.textContent = rejectedCount;
+      dbgLast.textContent = '✗ ' + rejectReason;
+    }
+  }
+  
+  // ── Auto-calibration ──
+  // Measure ambient noise floor for 2 seconds, set threshold accordingly
+  let calibrating = false;
+  let calibrationSamples = [];
+  let calibrationStart = 0;
+  
+  function startCalibration() {
+    calibrating = true;
+    calibrationSamples = [];
+    calibrationStart = audioCtx.currentTime;
+  }
+  
+  function finishCalibration() {
+    calibrating = false;
+    if (calibrationSamples.length === 0) return;
+    // Sort and take 95th percentile as ambient peak
+    calibrationSamples.sort((a, b) => a - b);
+    const idx = Math.floor(calibrationSamples.length * 0.95);
+    const ambient = calibrationSamples[idx];
+    // Set threshold to 2.5× ambient (so quiet voices easily pass)
+    const newThreshold = Math.max(0.001, Math.min(0.020, ambient * 2.5));
+    const newSlider = Math.round(newThreshold * 1000);
+    volThresh.value = newSlider;
+    volThreshNum.textContent = (newSlider / 1000).toFixed(3);
+    console.log('Calibrated: ambient=' + ambient.toFixed(4) + ', threshold=' + newThreshold.toFixed(4));
+    dbgLast.textContent = '校正完了 環境=' + ambient.toFixed(4) + ' 閾値=' + newThreshold.toFixed(4);
+  }
+  
+  function tick() {
+    if (!listening) return;
+    
+    // Always continue the animation loop even if paused, but skip processing
+    if (paused) {
+      rafId = requestAnimationFrame(tick);
+      return;
+    }
+    
+    analyser.getFloatTimeDomainData(dataArray);
+    analyser.getFloatFrequencyData(freqArray);
+    
+    const level = rms(dataArray);
+    const pitchResult = detectPitch(dataArray, audioCtx.sampleRate);
+    const pitch = pitchResult.freq;
+    const hnr = computeHNR(freqArray, audioCtx.sampleRate, analyser.fftSize);
+    
+    if (level > peakLevel) {
+      peakLevel = level;
+      dbgPeak.textContent = peakLevel.toFixed(4);
+    }
+    
+    const threshold = getVolThresh();
+    
+    // Update live VU meter
+    const liveFill = document.getElementById('live-vu-fill');
+    const liveThresh = document.getElementById('live-vu-thresh');
+    if (liveFill) {
+      liveFill.style.width = Math.min(100, level * 1000) + '%';
+      liveFill.style.background = level > threshold ? '#E94F37' : '#00A19A';
+    }
+    if (liveThresh) {
+      liveThresh.style.left = Math.min(100, threshold * 1000) + '%';
+    }
+    
+    // Calibration phase
+    if (calibrating) {
+      calibrationSamples.push(level);
+      if (audioCtx.currentTime - calibrationStart >= 2.0) {
+        finishCalibration();
+      }
+      rafId = requestAnimationFrame(tick);
+      return; // Don't detect voice during calibration
+    }
+    
+    // ── Suppress detection while the rabbit is speaking ──
+    // Prevents the rabbit's own audio (from built-in speakers) from being detected as the child's voice.
+    // The rabbitSpeaking flag is set/cleared in showModeling and has multiple safety nets to ensure it never gets stuck:
+    // - Cleared at end of demo, on pause, on home, on pause-mid-repeat
+    // - Vocal detection has a 5-second failsafe timer (onVocalStart) as a final backstop
+    if (rabbitSpeaking) {
+      // If we were mid-detection when the rabbit started, end cleanly to avoid a stuck state
+      if (inVocalization) {
+        inVocalization = false;
+        vocalFrames = [];
+        recordedSamples = [];
+        if (vocalFailsafeTimer) {
+          clearTimeout(vocalFailsafeTimer);
+          vocalFailsafeTimer = null;
+        }
+      }
+      rafId = requestAnimationFrame(tick);
+      return;
+    }
+    
+    if (inVocalization) {
+      for (let i = 0; i < dataArray.length; i++) recordedSamples.push(dataArray[i]);
+      vocalFrames.push({ level, pitch, hnr });
+      if (level < threshold * 0.4) onVocalEnd();
+    } else if (level > threshold) {
+      onVocalStart();
+      vocalFrames.push({ level, pitch, hnr });
+    }
+    
+    rafId = requestAnimationFrame(tick);
+  }
+  
+  // ── Dashboard ──
+  function updateDashboard() {
+    document.getElementById('d-count').innerHTML = acceptedCount + '<span class="stat-card-unit"> 回</span>';
+    
+    const minutes = audioCtx ? Math.round((audioCtx.currentTime - sessionStartTime) / 60) : 0;
+    document.getElementById('d-duration').innerHTML = minutes + '<span class="stat-card-unit"> 分</span>';
+    
+    const avgDur = acceptedCount > 0 ? Math.round(stats.totalDur / acceptedCount * 1000) : 0;
+    document.getElementById('d-avgdur').innerHTML = avgDur + '<span class="stat-card-unit"> ms</span>';
+    
+    const avgPitch = stats.pitches.length > 0
+      ? Math.round(stats.pitches.reduce((a,b) => a+b, 0) / stats.pitches.length)
+      : 0;
+    document.getElementById('d-avgpitch').innerHTML = (avgPitch || '—') + '<span class="stat-card-unit"> Hz</span>';
+    
+    // Timeline
+    const timelineBar = document.getElementById('timeline-bar');
+    timelineBar.innerHTML = '';
+    const max = Math.max(1, ...timelineData);
+    timelineData.forEach(count => {
+      const tick = document.createElement('div');
+      tick.className = 'timeline-tick';
+      tick.style.height = ((count / max) * 100) + '%';
+      timelineBar.appendChild(tick);
+    });
+    document.getElementById('timeline-now').textContent = (timelineData.length * 30) + '秒';
+    
+    // Insights
+    const insights = document.getElementById('insights');
+    let msg = '';
+    if (acceptedCount === 0) {
+      msg = 'まだ発声が記録されていません。マイクの感度を確認するか、お子さんに声を出すよう促してみてください。';
+    } else if (acceptedCount < 5) {
+      msg = `<strong>${acceptedCount}回の発声</strong>を記録しました。少しずつペースを上げていきましょう。`;
+    } else if (acceptedCount < 20) {
+      msg = `<strong>${acceptedCount}回の発声</strong>。ペースは順調です。平均ピッチ${avgPitch}Hzは${avgPitch > 250 ? '幼児の発声範囲' : '低めの範囲'}です。`;
+    } else {
+      const vpm = (acceptedCount / Math.max(1, minutes)).toFixed(1);
+      msg = `<strong>${acceptedCount}回の発声</strong>（毎分${vpm}回）。とても良い活動量です。発声時間 ${avgDur}ms は${avgDur > 500 ? '十分な持続' : 'もう少し長くなると良い'}範囲。`;
+    }
+    insights.innerHTML = '<strong>観察</strong>: ' + msg;
+  }
+  
+  // Permission check
+  if (navigator.permissions) {
+    navigator.permissions.query({ name: 'microphone' }).then(result => {
+      const upd = () => {
+        dbgPerm.textContent = result.state === 'granted' ? '許可済み' :
+                              result.state === 'denied' ? '拒否済み' : '未確認';
+      };
+      upd();
+      result.onchange = upd;
+    }).catch(() => {});
+  }
+  
+  // Pre-load speech synthesis voices (Chrome quirk: voices load async)
+  if ('speechSynthesis' in window) {
+    speechSynthesis.getVoices();
+    speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+  }
+})();
+</script>
+
+</body>
+</html>
